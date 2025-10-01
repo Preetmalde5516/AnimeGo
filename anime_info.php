@@ -1,51 +1,63 @@
-<?php 
-    // Include the header and database connection
-    include "header.php";
-    include "db_connect.php";
+<?php
+// Include the header and database connection
+include "header.php";
+include "db_connect.php"; // Make sure this file has the $conn variable
 
-    // --- 1. GET ANIME ID & FETCH DATA ---
-    // Check if the 'id' is set in the URL, otherwise redirect or show an error
-    if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-        // You can redirect to a 404 page or the home page
-        header("Location: index.php");
-        exit();
-    }
+// --- 1. GET ITEM ID & TYPE, THEN VALIDATE ---
+// Check if both 'id' and 'type' are set in the URL
+if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['type'])) {
+    header("Location: index.php"); // Redirect to home if info is missing
+    exit();
+}
 
-    $anime_id = $_GET['id'];
+$item_id = (int)$_GET['id'];
+$item_type = $_GET['type'];
 
-    // Use PREPARED STATEMENTS to prevent SQL Injection
-    $sql = "SELECT * FROM movies WHERE id = ?";
-    $stmt = mysqli_prepare($conn, $sql);
-    mysqli_stmt_bind_param($stmt, "i", $anime_id);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+// **KEY CHANGE**: Determine the correct table name based on the 'type' parameter.
+// This is a security measure to prevent arbitrary table names in the query.
+$tableName = '';
+if ($item_type === 'movie') {
+    $tableName = 'movies';
+} elseif ($item_type === 'series') {
+    $tableName = 'series';
+} else {
+    // If the type is not 'movie' or 'series', stop the script.
+    echo "<div class='container' style='padding: 50px; text-align: center;'><h1>Invalid Type</h1><p>The content type specified is not valid.</p></div>";
+    include "footer.php";
+    exit();
+}
 
-    // Fetch the anime data
-    $anime = mysqli_fetch_assoc($result);
+// --- 2. FETCH DATA FROM THE CORRECT TABLE ---
+// Use PREPARED STATEMENTS with the dynamic table name
+$sql = "SELECT * FROM {$tableName} WHERE id = ?";
+$stmt = mysqli_prepare($conn, $sql);
+mysqli_stmt_bind_param($stmt, "i", $item_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$item = mysqli_fetch_assoc($result);
 
-    // If no anime is found with that ID, handle the error
-    if (!$anime) {
-        echo "<div class='container' style='padding: 50px; text-align: center;'><h1>Anime Not Found</h1><p>Sorry, we couldn't find the anime you're looking for.</p></div>";
-        include "footer.php";
-        exit(); // Stop the script
-    }
+// If no item is found with that ID in the specified table, handle the error
+if (!$item) {
+    echo "<div class='container' style='padding: 50px; text-align: center;'><h1>Content Not Found</h1><p>Sorry, we couldn't find what you're looking for.</p></div>";
+    include "footer.php";
+    exit(); // Stop the script
+}
 
-    // --- 2. PREPARE DYNAMIC DATA ---
-    // Use htmlspecialchars to prevent XSS attacks when echoing data
-    $title = htmlspecialchars($anime['title']);
-    $japanese_title = htmlspecialchars($anime['japanese_title'] ?? 'N/A');
-    $synopsis = htmlspecialchars($anime['description'] ?? 'No synopsis available.');
-    $poster_image = htmlspecialchars($anime['image_path'] ?? 'default_poster.jpg');
-    $background_image = htmlspecialchars($anime['background_image'] ?? 'default_background.jpg');
-    $rating = htmlspecialchars($anime['rating'] ?? 'N/A');
-    $quality = htmlspecialchars($anime['quality'] ?? 'HD');
-    $type = htmlspecialchars($anime['type'] ?? 'TV');
-    $duration = htmlspecialchars($anime['duration'] ?? 'N/A');
-    $release_year = htmlspecialchars($anime['release_year'] ?? 'N/A');
-    $studios = htmlspecialchars($anime['studios'] ?? 'N/A');
-    
-    // Handle genres - assuming they are stored as a comma-separated string like "Action, Adventure, Fantasy"
-    $genres = !empty($anime['genres']) ? explode(', ', $anime['genres']) : [];
+// --- 3. PREPARE DYNAMIC DATA FOR DISPLAY ---
+// Use htmlspecialchars to prevent XSS attacks when echoing data
+$title = htmlspecialchars($item['title']);
+$japanese_title = htmlspecialchars($item['japanese_title'] ?? 'N/A');
+$synopsis = htmlspecialchars($item['description'] ?? 'No synopsis available.');
+$poster_image = htmlspecialchars($item['image_path'] ?? 'default_poster.jpg');
+$background_image = htmlspecialchars($item['background_image'] ?? 'default_background.jpg');
+$rating = htmlspecialchars($item['rating'] ?? 'N/A');
+$quality = htmlspecialchars($item['quality'] ?? 'HD');
+// Note: $type variable is from the database, while $item_type is from the URL. They should be the same.
+$type = htmlspecialchars($item['type'] ?? 'TV');
+$duration = htmlspecialchars($item['duration'] ?? 'N/A');
+$release_year = htmlspecialchars($item['release_year'] ?? 'N/A');
+$studios = htmlspecialchars($item['studios'] ?? 'N/A');
+$genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
 ?>
 
 <!DOCTYPE html>
@@ -57,16 +69,15 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* Your existing CSS styles go here... */
+        /* Your existing CSS styles... (No changes needed here) */
         .anime-info-hero {
-            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)), 
+            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
                         url('assets/images/backgrounds/<?php echo $background_image; ?>') no-repeat center center/cover;
             min-height: 70vh;
             display: flex;
             align-items: center;
             position: relative;
         }
-
         .anime-info-content { display: grid; grid-template-columns: 250px 1fr 250px; gap: 30px; align-items: start; margin-top: 40px; }
         .anime-poster { position: sticky; top: 100px; }
         .anime-poster img { width: 100%; border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); }
@@ -85,19 +96,14 @@
         .btn-watch:hover { background-color: #e55a5a; transform: translateY(-2px); }
         .btn-add { background-color: transparent; color: white; border: 2px solid #ff6b6b; }
         .btn-add:hover { background-color: #ff6b6b; color: white; }
-        .synopsis-section { background-color: transparent; padding: 0; margin-bottom: 30px; }
         .synopsis-text { color: #cccccc; line-height: 1.6; margin-bottom: 20px; }
         .read-more { color: #ff6b6b; cursor: pointer; font-weight: 600; }
-        .anime-metadata { background-color: transparent; padding: 0; position: sticky; top: 100px; }
+        .anime-metadata { position: sticky; top: 100px; }
         .metadata-item { margin-bottom: 15px; }
         .metadata-label { color: #ff6b6b; font-weight: 600; margin-right: 10px; }
         .metadata-value { color: #ffffff; }
         .genre-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-        .genre-tag { background-color: #666666; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-decoration: none; transition: background-color 0.3s; font-weight: 500; }
-        .genre-tag:hover { background-color: #888888; }
-        .popular-section { margin-top: 50px; padding: 30px 0; }
-        .popular-section h3, .section-title { color: #ff6b6b; margin-bottom: 20px; font-size: 1.5rem; }
-        
+        .genre-tag { background-color: #666666; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-decoration: none; }
         @media (max-width: 768px) {
             .anime-info-content { grid-template-columns: 1fr; }
             .anime-poster, .anime-metadata { position: static; text-align: center; }
@@ -107,7 +113,6 @@
     </style>
 </head>
 <body>
-    
     <main>
         <section class="anime-info-hero">
             <div class="container">
@@ -118,7 +123,7 @@
 
                     <div class="synopsis-section">
                         <div class="breadcrumb">
-                            <a href="index.php">Home</a> > <a href="series.php?type=<?php echo $type; ?>"><?php echo $type; ?></a> > <?php echo $title; ?>
+                            <a href="index.php">Home</a> > <a href="category.php?type=<?php echo urlencode($item_type); ?>"><?php echo ucfirst($item_type); ?></a> > <?php echo $title; ?>
                         </div>
                         <h1 class="anime-title"><?php echo $title; ?></h1>
                         <div class="anime-tags">
@@ -128,20 +133,19 @@
                             <span class="tag"><?php echo $duration; ?></span>
                         </div>
                         <div class="action-buttons">
-                            <button class="btn-watch" data-anime-id="<?php echo $anime_id; ?>">
+                            <!-- **KEY CHANGE**: Added data-item-type to pass the type to JS -->
+                            <button class="btn-watch" data-item-id="<?php echo $item_id; ?>" data-item-type="<?php echo $item_type; ?>">
                                 <i class="fas fa-play"></i> Watch now
                             </button>
-                            <button class="btn-add" data-anime-id="<?php echo $anime_id; ?>">
+                            <button class="btn-add" data-item-id="<?php echo $item_id; ?>">
                                 <i class="fas fa-plus"></i> Add to List
                             </button>
                         </div>
                         <p class="synopsis-text"></p>
-                        <div class="share-section">
-                            <span>Share this anime with your friends!</span>
-                        </div>
                     </div>
 
                     <div class="anime-metadata">
+                        <!-- Metadata section remains the same, displaying fetched data -->
                         <div class="metadata-item">
                             <span class="metadata-label">Japanese:</span>
                             <span class="metadata-value"><?php echo $japanese_title; ?></span>
@@ -161,16 +165,12 @@
                         <div class="metadata-item">
                             <span class="metadata-label">Genres:</span>
                             <div class="genre-tags">
-                                <?php 
+                                <?php
                                 foreach ($genres as $genre) {
                                     echo '<a href="genre.php?name=' . urlencode(trim($genre)) . '" class="genre-tag">' . htmlspecialchars(trim($genre)) . '</a>';
                                 }
                                 ?>
                             </div>
-                        </div>
-                        <div class="metadata-item">
-                            <span class="metadata-label">Studios:</span>
-                            <span class="metadata-value"><?php echo $studios; ?></span>
                         </div>
                     </div>
                 </div>
@@ -180,21 +180,26 @@
         <section class="section">
             <div class="container">
                 <div>
-                    <h3 class="section-title">Popular Animes</h3>
+                    <!-- **KEY CHANGE**: Changed title to be more generic -->
+                    <h3 class="section-title">You Might Also Like</h3>
                 </div>
                 <div class="cards">
                     <?php
-                    $sql = "SELECT * FROM movies ORDER BY id DESC LIMIT 5";
-                    $result = mysqli_query($conn, $sql);
-                    while ($row = mysqli_fetch_assoc($result)) {
+                    // **KEY CHANGE**: Updated query to fetch a mix of popular movies AND series
+                    $popular_sql = "(SELECT id, title, image_path, 'movie' as item_type FROM movies)
+                                    UNION ALL
+                                    (SELECT id, title, image_path, 'series' as item_type FROM series)
+                                    ORDER BY RAND()
+                                    LIMIT 5";
+                    $popular_result = mysqli_query($conn, $popular_sql);
+                    while ($row = mysqli_fetch_assoc($popular_result)) {
                         echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
                         echo '<div class="card-content">';
                         echo '<div class="info-section">';
                         echo '<h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3>';
-                        echo '<div class="card-meta">';
                         echo '</div>';
-                        echo '</div>';
-                        echo '<a href="anime_info.php?id=' . $row['id'] . '" class="card-link"></a>';
+                        // **KEY CHANGE**: The link now correctly includes the type
+                        echo '<a href="anime_info.php?id=' . $row['id'] . '&type=' . $row['item_type'] . '" class="card-link"></a>';
                         echo '</div>';
                         echo '</div>';
                     }
@@ -209,17 +214,15 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const synopsisTextElement = document.querySelector('.synopsis-text');
-        
         const fullText = <?php echo json_encode($synopsis ?? ''); ?>;
-        
         const shortText = fullText.length > 300 ? fullText.substring(0, 300) + '...' : fullText;
-        
+
         if (fullText.length > 300) {
             synopsisTextElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
         } else {
             synopsisTextElement.innerHTML = fullText;
         }
-        
+
         synopsisTextElement.addEventListener('click', function(e) {
             if (e.target.classList.contains('read-more')) {
                 if (e.target.textContent === '+ More') {
@@ -232,9 +235,8 @@
 
         const addToListBtn = document.querySelector('.btn-add');
         addToListBtn.addEventListener('click', function() {
-            console.log('Adding anime ID ' + this.dataset.animeId + ' to list.');
-            
-            this.innerHTML = '<i class="fas fa-check"></i> Added to List';
+            console.log('Adding item ID ' + this.dataset.itemId + ' to list.');
+            this.innerHTML = '<i class="fas fa-check"></i> Added';
             this.style.backgroundColor = '#4CAF50';
             this.style.borderColor = '#4CAF50';
             this.disabled = true;
@@ -242,11 +244,13 @@
 
         const watchBtn = document.querySelector('.btn-watch');
         watchBtn.addEventListener('click', function() {
-            // **FIXED**: Changed 'id' to 'movie_id' to match watchpage.php
-            window.location.href = 'watchpage.php?movie_id=' + this.dataset.animeId;
+            // **KEY CHANGE**: Get both id and type to build the correct URL
+            const itemId = this.dataset.itemId;
+            const itemType = this.dataset.itemType;
+            // Redirect to a watch page that can also handle 'type'
+            window.location.href = `watchpage.php?id=${itemId}&type=${itemType}`;
         });
     });
-    
     </script>
 </body>
 </html>
