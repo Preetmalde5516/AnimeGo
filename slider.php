@@ -14,7 +14,7 @@
             <div class="slide-content">
                 <h3>Demon Slayer: Entertainment District Arc</h3>
                 <p>Tanjiro and his friends join the Sound Hashira Tengen Uzui</p>
-                <a href="#" class="btn btn-primary">Watch Now</a>
+                <a href="#" class="btn btn-primary">Watch Now </a>
             </div>
         </div>
         <div class="slide">
