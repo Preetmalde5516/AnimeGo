@@ -1,618 +1,246 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+include 'db_connect.php'; // Include your database connection
+
+// --- 1. VALIDATE URL PARAMETERS ---
+if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['type'])) {
+    // Redirect or show error if parameters are missing
+    header("Location: index.php");
+    exit();
+}
+
+$item_id = (int)$_GET['id'];
+$item_type = $_GET['type'];
+$item = null;
+$episodes = [];
+$current_episode_number = 1; // Default for series
+
+// --- 2. FETCH DATA BASED ON TYPE (MOVIE OR SERIES) ---
+$tableName = '';
+if ($item_type === 'movie') {
+    $tableName = 'movies';
+} elseif ($item_type === 'series') {
+    $tableName = 'series';
+} else {
+    die("Invalid content type.");
+}
+
+// Fetch the main item details (movie or series)
+$stmt = $conn->prepare("SELECT * FROM {$tableName} WHERE id = ?");
+$stmt->bind_param("i", $item_id);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result->num_rows > 0) {
+    $item = $result->fetch_assoc();
+} else {
+    die("Content not found.");
+}
+$stmt->close();
+
+// If it's a series, fetch all its episodes
+if ($item_type === 'series') {
+    $stmt = $conn->prepare("SELECT * FROM episodes WHERE series_id = ? ORDER BY episode_number ASC");
+    $stmt->bind_param("i", $item_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $episodes[] = $row;
+    }
+    $stmt->close();
+    
+    // Determine which episode to play
+    if (isset($_GET['ep']) && is_numeric($_GET['ep'])) {
+        $current_episode_number = (int)$_GET['ep'];
+    }
+}
+
+// --- 3. PREPARE VARIABLES FOR DISPLAY ---
+$title = htmlspecialchars($item['title']);
+$synopsis = htmlspecialchars($item['description'] ?? 'No synopsis available.');
+$poster_image = htmlspecialchars($item['image_path'] ?? 'default_poster.jpg');
+// These fields might not exist in the series table, so we use the null coalescing operator
+$rating = htmlspecialchars($item['rating'] ?? 'N/A'); 
+$quality = htmlspecialchars($item['quality'] ?? 'HD');
+$duration = htmlspecialchars($item['duration'] ?? 'N/A');
+
+// Determine the video source
+$video_src = '';
+if ($item_type === 'movie') {
+    $video_src = $item['video_path'] ?? '';
+} elseif (!empty($episodes)) {
+    // Find the video path for the current episode
+    foreach ($episodes as $episode) {
+        if ($episode['episode_number'] == $current_episode_number) {
+            $video_src = $episode['video_path'] ?? '';
+            break;
+        }
+    }
+    // Fallback to the first episode if the requested one doesn't exist
+    if(empty($video_src)) {
+        $video_src = $episodes[0]['video_path'] ?? '';
+        $current_episode_number = $episodes[0]['episode_number'];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch Kouryuu Densetsu Villgust - AnimeGo</title>
+    <title>Watch <?php echo $title; ?> - AnimeGo</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        /* Your existing CSS from the static file... */
+        body { background-color: #121212; color: #fff; margin:0; }
+        .watch-container { display: flex; flex-direction: column; min-height: 100vh; }
+        .watch-content { display: grid; grid-template-columns: 250px 1fr 300px; flex: 1; gap: 0; }
+        .episodes-sidebar { background-color: #1a1a1a; padding: 20px; border-right: 1px solid #333; overflow-y: auto; max-height: calc(100vh - 80px); }
+        .episodes-title { color: #ff6b6b; font-size: 18px; margin-bottom: 15px; font-weight: 600; }
+        .episode-list { list-style: none; padding: 0; margin: 0; }
+        .episode-item { background-color: #2a2a2a; margin-bottom: 8px; border-radius: 6px; transition: all 0.3s; cursor: pointer; }
+        .episode-item:hover { background-color: #333; }
+        .episode-item.active { background: #ff6b6b; border: 1px solid #fff; }
+        .episode-link { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; color: white; text-decoration: none; }
+        .episode-number { font-weight: 600; margin-bottom: 2px; }
+        .play-icon { color: #4CAF50; font-size: 16px; }
+        .video-container { background-color: #000; display: flex; flex-direction: column; position: relative; }
+        .video-player { width: 100%; height: 80vh; background-color: #000; position: relative; }
+        #main-video { width: 100%; height: 100%; }
+        .video-controls { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); padding: 10px; display: flex; align-items: center; justify-content: space-between; opacity: 0; transition: opacity 0.3s; }
+        .video-player:hover .video-controls { opacity: 1; }
+        .control-left, .control-right { display: flex; align-items: center; gap: 15px; }
+        .control-btn, .play-pause-btn { background: none; border: none; color: white; font-size: 18px; cursor: pointer; }
+        .play-pause-btn { font-size: 24px; }
+        .time-display { font-size: 14px; }
+        .current-episode { padding: 15px; background-color: #1a1a1a; text-align: center; font-weight: 600; }
+        .anime-info-sidebar { background-color: #1a1a1a; padding: 20px; border-left: 1px solid #333; overflow-y: auto; max-height: calc(100vh - 80px); }
+        .anime-poster { width: 100%; border-radius: 8px; margin-bottom: 15px; }
+        .anime-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .synopsis { font-size: 14px; line-height: 1.5; margin-bottom: 15px; color: #ccc; }
+        .read-more { color: #ff6b6b; cursor: pointer; font-size: 12px; }
+        .view-detail-btn { background-color: #ff6b6b; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 15px; text-align: center; text-decoration: none; display: block; }
+        .section { padding: 40px 0; }
+        /* Responsive styles */
+        @media (max-width: 1024px) { .watch-content { grid-template-columns: 1fr; grid-template-rows: auto auto auto; } .episodes-sidebar, .anime-info-sidebar { max-height: 300px; order: 3; border:0; border-top: 1px solid #333; } .video-container { order: 1; } .anime-info-sidebar { order: 2; } .video-player { height: 56.25vw; /* 16:9 aspect ratio */ } }
 
-        .watch-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        .watch-content {
-            display: grid;
-            grid-template-columns: 250px 1fr 300px;
-            flex: 1;
-            gap: 0;
-        }
-
-
-        /* Left Sidebar - Episodes */
-        .episodes-sidebar {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-right: 1px solid #333;
-            overflow-y: auto;
-            max-height: calc(100vh - 80px);
-        }
-
-        .episodes-title {
-            color: #ff6b6b;
-            font-size: 18px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
-
-
-        .episode-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .episode-item {
-            background-color: #2a2a2a;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            overflow: hidden;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .episode-item:hover {
-            background-color: #333;
-        }
-
-        .episode-item.active {
-            background: linear-gradient(135deg, #6a4c93, #4a4a8a);
-            border: 1px solid #ff6b6b;
-        }
-
-        .episode-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            color: white;
-            text-decoration: none;
-        }
-
-        .episode-info {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .episode-number {
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .episode-title {
-            font-size: 12px;
-            color: #aaaaaa;
-        }
-
-        .play-icon {
-            color: #4CAF50;
-            font-size: 16px;
-        }
-
-        /* Center - Video Player */
-        .video-container {
-            background-color: #000;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .video-player {
-            width: 100%;
-            height: 80vh;
-            background: linear-gradient(45deg, #4a4a8a, #6a4c93, #8e44ad);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .video-placeholder {
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(0,0,0,0.3) 70%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-
-        .video-placeholder::before {
-            content: '';
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            background: conic-gradient(from 0deg, transparent, #ff6b6b, transparent);
-            border-radius: 50%;
-            animation: spin 3s linear infinite;
-        }
-
-        .video-placeholder::after {
-            content: '▶';
-            position: absolute;
-            font-size: 60px;
-            color: white;
-            z-index: 2;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .video-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(transparent, rgba(0,0,0,0.8));
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .control-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .play-pause-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        .volume-control {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .volume-slider {
-            width: 80px;
-        }
-
-        .time-display {
-            color: white;
-            font-size: 14px;
-        }
-
-        .control-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .control-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .control-btn:hover {
-            color: #ff6b6b;
-        }
-
-
-        .current-episode {
-            background-color: #4CAF50;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 4px;
-            margin: 10px 0;
-            font-weight: 600;
-        }
-
-
-        /* Right Sidebar - Anime Info */
-        .anime-info-sidebar {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-left: 1px solid #333;
-            overflow-y: auto;
-            max-height: calc(100vh - 80px);
-        }
-
-        .anime-poster {
-            width: 100%;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .anime-title {
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .anime-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 15px;
-        }
-
-        .tag {
-            background-color: #ff6b6b;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .tag.rating {
-            background-color: #4CAF50;
-        }
-
-        .tag.quality {
-            background-color: #2196F3;
-        }
-
-        .synopsis {
-            color: #cccccc;
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 15px;
-        }
-
-        .read-more {
-            color: #ff6b6b;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-
-        .view-detail-btn {
-            background-color: #ff6b6b;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-
-        .rating-section {
-            background-color: #2a2a2a;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-
-        .rating-display {
-            color: #ffcc00;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .vote-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-
-        /* Responsive Design */
-        @media (max-width: 1024px) {
-            .watch-content {
-                grid-template-columns: 250px 1fr 250px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .watch-content {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto 1fr auto;
-            }
-
-            .episodes-sidebar {
-                order: 3;
-                max-height: 200px;
-                border-right: none;
-                border-top: 1px solid #333;
-            }
-
-            .anime-info-sidebar {
-                order: 2;
-                max-height: 300px;
-                border-left: none;
-                border-top: 1px solid #333;
-            }
-
-            .video-container {
-                order: 1;
-            }
-
-            .video-player {
-                height: 50vh;
-            }
-
-            .header-left {
-                gap: 10px;
-            }
-
-            .search-container {
-                min-width: 200px;
-            }
-
-            .header-right {
-                gap: 10px;
-            }
-
-            .social-icons {
-                display: none;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .watch-header {
-                padding: 10px;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .header-left,
-            .header-right {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .search-container {
-                min-width: 150px;
-            }
-
-            .video-player {
-                height: 50vh;
-            }
-
-            .options-row {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="watch-container">
-        <!-- Header -->
         <?php include 'header.php'; ?>
-        <?php include 'db_connect.php'; ?>
 
         <div class="watch-content">
-        <!-- Left Sidebar - Episodes -->
-        <aside class="episodes-sidebar">
-            <h3 class="episodes-title">List of episodes:</h3>
-            <ul class="episode-list">
-                <li class="episode-item active">
-                    <a href="#" class="episode-link">
-                        <div class="episode-info">
-                            <div class="episode-number">1 Episode 1</div>
-                        </div>
-                        <i class="fas fa-play play-icon"></i>
-                    </a>
-                </li>
-                <li class="episode-item">
-                    <a href="#" class="episode-link">
-                        <div class="episode-info">
-                            <div class="episode-number">2 Episode 2</div>
-                        </div>
-                        <i class="fas fa-play play-icon"></i>
-                    </a>
-                </li>
-                <li class="episode-item">
-                    <a href="#" class="episode-link">
-                        <div class="episode-info">
-                            <div class="episode-number">3 Episode 3</div>
-                        </div>
-                        <i class="fas fa-play play-icon"></i>
-                    </a>
-                </li>
-                <li class="episode-item">
-                    <a href="#" class="episode-link">
-                        <div class="episode-info">
-                            <div class="episode-number">4 Episode 4</div>
-                        </div>
-                        <i class="fas fa-play play-icon"></i>
-                    </a>
-                </li>
-            </ul>
-        </aside>
+            <!-- Left Sidebar - Episodes (Only shows for series) -->
+            <aside class="episodes-sidebar">
+                <h3 class="episodes-title">List of episodes:</h3>
+                <?php if ($item_type === 'series' && !empty($episodes)): ?>
+                    <ul class="episode-list">
+                        <?php foreach ($episodes as $ep): ?>
+                            <li class="episode-item <?php echo ($ep['episode_number'] == $current_episode_number) ? 'active' : ''; ?>" 
+                                data-ep-number="<?php echo $ep['episode_number']; ?>" 
+                                data-video-src="assets/videos/<?php echo htmlspecialchars($ep['video_path']); ?>">
+                                <a href="watchpage.php?id=<?php echo $item_id; ?>&type=series&ep=<?php echo $ep['episode_number']; ?>" class="episode-link">
+                                    <div class="episode-info">
+                                        <div class="episode-number">Episode <?php echo $ep['episode_number']; ?></div>
+                                    </div>
+                                    <i class="fas fa-play play-icon"></i>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p>This is a movie and does not have an episode list.</p>
+                <?php endif; ?>
+            </aside>
 
-        <!-- Center - Video Player -->
-        <main class="video-container">
-            <div class="video-player">
-                <div class="video-placeholder"></div>
-                <div class="video-controls">
-                    <div class="control-left">
-                        <button class="play-pause-btn">
-                            <i class="fas fa-pause"></i>
-                        </button>
-                        <div class="volume-control">
-                            <i class="fas fa-volume-up"></i>
-                            <input type="range" class="volume-slider" min="0" max="100" value="50">
-                        </div>
-                        <div class="time-display">00:10 / 28:35</div>
-                    </div>
-                    <div class="control-right">
-                        <button class="control-btn" title="Rewind 10s">
-                            <i class="fas fa-backward"></i>
-                        </button>
-                        <button class="control-btn" title="Forward 10s">
-                            <i class="fas fa-forward"></i>
-                        </button>
-                        <button class="control-btn" title="Picture in Picture">
-                            <i class="fas fa-expand-arrows-alt"></i>
-                        </button>
-                        <button class="control-btn" title="Fullscreen">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                        <button class="control-btn" title="Settings">
-                            <i class="fas fa-cog"></i>
-                        </button>
-                        <button class="control-btn" title="Subtitles">
-                            <i class="fas fa-closed-captioning"></i>
-                        </button>
-                    </div>
+            <!-- Center - Video Player -->
+            <main class="video-container">
+                <div class="video-player">
+                    <video id="main-video" src="assets/videos/<?php echo htmlspecialchars($video_src); ?>" controls></video>
                 </div>
-            </div>
+                <div class="current-episode">
+                    You are watching: <strong><?php echo $title; ?></strong>
+                    <?php if ($item_type === 'series'): ?>
+                        - Episode <?php echo $current_episode_number; ?>
+                    <?php endif; ?>
+                </div>
+            </main>
 
-            <div class="current-episode">
-                You are watching Episode 1.
-            </div>
-        </main>
-
-        <!-- Right Sidebar - Anime Info -->
-        <aside class="anime-info-sidebar">
-            <img src="https://via.placeholder.com/250x350/6a4c93/ffffff?text=Villgust" alt="Anime Poster" class="anime-poster">
-            <h2 class="anime-title">Kouryuu Densetsu Villgust</h2>
-            <div class="anime-tags">
-                <span class="tag rating">PG-13</span>
-                <span class="tag quality">HD</span>
-                <span class="tag">cc 2</span>
-                <span class="tag">OVA</span>
-                <span class="tag">28m</span>
-            </div>
-            <div class="synopsis">
-                Villgust is a peaceful world that exists parallel to ours. However, now an evil deity has been revived and has sent evil creatures to destroy many countries, which left darkness and terror to rule the world. The peoples' prayers and cries has reached out to the gods, and they have chosen five brave warriors to fight against the evil forces... <span class="read-more">+ More</span>
-            </div>
-           
-            <button class="view-detail-btn">View detail</button>
-            <div class="rating-section">
-                <div class="rating-display">★ 0 (0 voted)</div>
-                <button class="vote-btn">Vote now</button>
-            </div>
-            
-        </aside>
+            <!-- Right Sidebar - Anime Info -->
+            <aside class="anime-info-sidebar">
+                <img src="assets/images/<?php echo $poster_image; ?>" alt="Poster for <?php echo $title; ?>" class="anime-poster">
+                <h2 class="anime-title"><?php echo $title; ?></h2>
+                <div class="synopsis"><?php echo $synopsis; ?></div>
+                <a href="anime_info.php?id=<?php echo $item_id; ?>&type=<?php echo $item_type; ?>" class="view-detail-btn">View Full Details</a>
+            </aside>
         </div>
     </div>
 
     <section class="section">
-            <div class="container">
-            <h3 class="section-title">Popular Animes</h3>
+        <div class="container">
+            <h3 class="section-title">You Might Also Like</h3>
             <div class="cards">
-                <?php
-                $sql = "SELECT * FROM movies ORDER BY id DESC LIMIT 3";
-                $result = mysqli_query($conn, $sql);
-                while ($row = mysqli_fetch_assoc($result)) {
-                    echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
-
-                    echo '<div class="card-content">';
-
-                    echo '<div class="info-section">';
-                    echo '<h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3>';
-                    echo '<div class="card-meta">';
-                    echo '</div>';
-                    echo '</div>';
-
-                    echo '<a href="anime_info.php?id=' . $row['id'] . '" class="card-link"></a>';
-
-                    echo '</div>';
-                    echo '</div>';
-                }
+                 <?php
+                    $popular_sql = "(SELECT id, title, image_path, 'movie' as item_type FROM movies)
+                                    UNION ALL
+                                    (SELECT id, title, image_path, 'series' as item_type FROM series)
+                                    ORDER BY RAND() LIMIT 3";
+                    $popular_result = mysqli_query($conn, $popular_sql);
+                    while ($row = mysqli_fetch_assoc($popular_result)) {
+                        echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
+                        echo '<div class="card-content">';
+                        echo '<div class="info-section"><h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3></div>';
+                        echo '<a href="anime_info.php?id=' . $row['id'] . '&type=' . $row['item_type'] . '" class="card-link"></a>';
+                        echo '</div></div>';
+                    }
+                    mysqli_close($conn);
                 ?>
             </div>
-            </div>
-        </section>
+        </div>
+    </section>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Episode selection
-            const episodeItems = document.querySelectorAll('.episode-item');
-            episodeItems.forEach(item => {
-                item.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    episodeItems.forEach(ep => ep.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
+    document.addEventListener('DOMContentLoaded', function() {
+        const videoPlayer = document.getElementById('main-video');
+        const episodeItems = document.querySelectorAll('.episode-item');
 
-            // Play/Pause functionality
-            const playPauseBtn = document.querySelector('.play-pause-btn');
-            const videoPlaceholder = document.querySelector('.video-placeholder');
-            let isPlaying = false;
-
-            playPauseBtn.addEventListener('click', function() {
-                isPlaying = !isPlaying;
-                const icon = this.querySelector('i');
-                if (isPlaying) {
-                    icon.className = 'fas fa-pause';
-                    videoPlaceholder.style.animationPlayState = 'running';
-                } else {
-                    icon.className = 'fas fa-play';
-                    videoPlaceholder.style.animationPlayState = 'paused';
-                }
-            });
-
-            
-
-
-            // Read more functionality
-            const readMore = document.querySelector('.read-more');
-            const synopsis = document.querySelector('.synopsis');
-            
-            // Define the full text (without the read-more span)
-            const fullText = "Villgust is a peaceful world that exists parallel to ours. However, now an evil deity has been revived and has sent evil creatures to destroy many countries, which left darkness and terror to rule the world. The peoples' prayers and cries has reached out to the gods, and they have chosen five brave warriors to fight against the evil forces.";
-            
-            // Define the short text
-            const shortText = fullText.substring(0, 300) + '...';
-            
-            // Set initial state to short text
-            synopsis.innerHTML = shortText + ' <span class="read-more">+ More</span>';
-            
-            // Update the readMore reference after changing innerHTML
-            const readMoreBtn = synopsis.querySelector('.read-more');
-
-            readMoreBtn.addEventListener('click', function() {
-                if (this.textContent === '+ More') {
-                    synopsis.innerHTML = fullText + ' <span class="read-more">- Less</span>';
-                } else {
-                    synopsis.innerHTML = shortText + ' <span class="read-more">+ More</span>';
-                }
-            });
-
-            // Vote functionality
-            const voteBtn = document.querySelector('.vote-btn');
-            voteBtn.addEventListener('click', function() {
-                this.textContent = 'Voted!';
-                this.style.backgroundColor = '#ff6b6b';
-                this.disabled = true;
-            });
-
-            // Volume control
-            const volumeSlider = document.querySelector('.volume-slider');
-            const volumeIcon = document.querySelector('.volume-control i');
-            
-            volumeSlider.addEventListener('input', function() {
-                const volume = this.value;
-                if (volume == 0) {
-                    volumeIcon.className = 'fas fa-volume-mute';
-                } else if (volume < 50) {
-                    volumeIcon.className = 'fas fa-volume-down';
-                } else {
-                    volumeIcon.className = 'fas fa-volume-up';
-                }
+        // This function handles clicks on episode list items
+        episodeItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                // We use a link now, so JS interaction can be simpler or removed
+                // e.preventDefault(); 
+                // const videoSrc = this.dataset.videoSrc;
+                // if (videoSrc && videoSrc !== '#') {
+                //     videoPlayer.src = videoSrc;
+                //     videoPlayer.play();
+                //     document.querySelector('.current-episode strong').textContent = '<?php echo $title; ?> - Episode ' + this.dataset.epNumber;
+                //     episodeItems.forEach(ep => ep.classList.remove('active'));
+                //     this.classList.add('active');
+                // }
             });
         });
+
+        // Synopsis "Read more" functionality
+        const synopsisElement = document.querySelector('.synopsis');
+        if (synopsisElement) {
+            const fullText = <?php echo json_encode($synopsis); ?>;
+            if (fullText.length > 150) {
+                const shortText = fullText.substring(0, 150) + '...';
+                synopsisElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
+
+                synopsisElement.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('read-more')) {
+                        if (e.target.textContent === '+ More') {
+                            synopsisElement.innerHTML = fullText + ' <span class="read-more">- Less</span>';
+                        } else {
+                            synopsisElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
+                        }
+                    }
+                });
+            }
+        }
+    });
     </script>
 </body>
 </html>
