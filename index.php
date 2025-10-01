@@ -28,34 +28,43 @@ if (session_status() === PHP_SESSION_NONE) {
     <main>
 
         <section class="section">
-            <div class="container">
-           <div>
-            <h3 class="section-title">Popular Animes</h3>
-            </div>
-            <div class="cards">
-                <?php
-                $sql = "SELECT * FROM movies ORDER BY id DESC LIMIT 5";
-                $result = mysqli_query($conn, $sql);
+    <div class="container">
+        <div>
+            <h3 class="section-title">Popular Titles</h3>
+        </div>
+        <div class="cards">
+            <?php
+            
+            $sql = "(SELECT id, title, image_path, 'movie' AS item_type FROM movies)
+                    UNION ALL
+                    (SELECT id, title, image_path, 'series' AS item_type FROM series)
+                    ORDER BY id DESC
+                    LIMIT 10";
+
+            $result = mysqli_query($conn, $sql);
+
+            // Check if the query was successful and returned results
+            if ($result && mysqli_num_rows($result) > 0) {
                 while ($row = mysqli_fetch_assoc($result)) {
+                    // Main card container with background image
                     echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
-
                     echo '<div class="card-content">';
-
                     echo '<div class="info-section">';
                     echo '<h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3>';
-                    echo '<div class="card-meta">';
-                    echo '</div>';
-                    echo '</div>';
+                    echo '</div>'; 
+                    echo '<a href="anime_info.php?id=' . $row['id'] . '&type=' . $row['item_type'] . '" class="card-link"></a>';
 
-                    echo '<a href="anime_info.php?id=' . $row['id'] . '" class="card-link"></a>';
-
-                    echo '</div>';
-                    echo '</div>';
+                    echo '</div>'; // end .card-content
+                    echo '</div>'; // end .movie-card
                 }
-                ?>
-            </div>
-            </div>
-        </section>
+            } else {
+                // Display a message if no movies or series are found
+                echo "<p>No popular titles found at the moment.</p>";
+            }
+            ?>
+        </div>
+    </div>
+</section>
         
     </main>
 
