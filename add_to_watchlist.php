@@ -2,52 +2,55 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 include 'db_connect.php';
 
-// Set the content type to JSON for the response
-header('Content-Type: application/json');
-
 // 1. Check if the user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'You must be logged in to modify your watchlist.']);
+if (!isset($_SESSION['user']['id'])) {
+    // Redirect to login or home page if not logged in
+    header("Location: index.php");
     exit();
 }
 
-// 2. Check if a movie ID was sent with the request
-if (!isset($_POST['movie_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request. No movie specified.']);
+// 2. Check if the required POST data was sent
+if (!isset($_POST['content_id']) || !isset($_POST['content_type'])) {
+    // Redirect back if the form data is incomplete
+    header("Location: " . ($_SERVER['HTTP_REFERER'] ?? 'index.php'));
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
-$movie_id = intval($_POST['movie_id']);
+$user_id = $_SESSION['user']['id'];
+$content_id = intval($_POST['content_id']);
+$content_type = $_POST['content_type'];
 
-// 3. Check if the item is already in the user's watchlist
-$stmt_check = $conn->prepare("SELECT id FROM watchlist WHERE user_id = ? AND movie_id = ?");
-$stmt_check->bind_param("ii", $user_id, $movie_id);
+// 3. Validate the content type
+if ($content_type !== 'movie' && $content_type !== 'series') {
+    // Redirect back if the content type is invalid
+    header("Location: " . ($_SERVER['HTTP_REFERER'] ?? 'index.php'));
+    exit();
+}
+
+// 4. Check if the item is already in the user's watchlist
+$stmt_check = $conn->prepare("SELECT id FROM user_watchlist WHERE user_id = ? AND content_id = ? AND content_type = ?");
+$stmt_check->bind_param("iis", $user_id, $content_id, $content_type);
 $stmt_check->execute();
 $result_check = $stmt_check->get_result();
 
 if ($result_check->num_rows > 0) {
-    // 4a. If it exists, REMOVE it
-    $stmt_delete = $conn->prepare("DELETE FROM watchlist WHERE user_id = ? AND movie_id = ?");
-    $stmt_delete->bind_param("ii", $user_id, $movie_id);
-    if ($stmt_delete->execute()) {
-        echo json_encode(['status' => 'success', 'action' => 'removed']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to remove from watchlist.']);
-    }
+    // 5a. If it exists, REMOVE it
+    $stmt_delete = $conn->prepare("DELETE FROM user_watchlist WHERE user_id = ? AND content_id = ? AND content_type = ?");
+    $stmt_delete->bind_param("iis", $user_id, $content_id, $content_type);
+    $stmt_delete->execute();
     $stmt_delete->close();
 } else {
-    // 4b. If it does not exist, ADD it
-    $stmt_insert = $conn->prepare("INSERT INTO watchlist (user_id, movie_id) VALUES (?, ?)");
-    $stmt_insert->bind_param("ii", $user_id, $movie_id);
-    if ($stmt_insert->execute()) {
-        echo json_encode(['status' => 'success', 'action' => 'added']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Failed to add to watchlist.']);
-    }
+    // 5b. If it does not exist, ADD it
+    $stmt_insert = $conn->prepare("INSERT INTO user_watchlist (user_id, content_id, content_type) VALUES (?, ?, ?)");
+    $stmt_insert->bind_param("iis", $user_id, $content_id, $content_type);
+    $stmt_insert->execute();
     $stmt_insert->close();
 }
 
 $stmt_check->close();
 $conn->close();
+
+// 6. Redirect the user back to the previous page
+header("Location: " . $_SERVER['HTTP_REFERER']);
+exit();
 ?>

@@ -157,7 +157,8 @@ if ($item_type === 'movie') {
             <!-- Center - Video Player -->
             <main class="video-container">
                 <div class="video-player">
-                    <video id="main-video" src="assets/videos/<?php echo htmlspecialchars($video_src); ?>" controls></video>
+                    <video id="main-video" src="assets/videos/<?php echo htmlspecialchars($video_src); ?>" type="video/mp4" controls></video>
+
                 </div>
                 <div class="current-episode">
                     You are watching: <strong><?php echo $title; ?></strong>

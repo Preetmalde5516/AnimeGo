@@ -114,6 +114,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li><a href="contact_us.php" class="<?= ($current_page == 'contact_us.php') ? 'active' : '' ?>">Contact US</a></li>
                 <li>
     <?php if (isset($_SESSION['user_id'])): ?><a href="watchlist.php" class="<?= ($current_page == 'watchlist.php') ? 'active' : '' ?>">watchlist</a>    <?php endif; ?></li>
+        <?php if (isset($_SESSION['user'])): ?>
+            <li><a href="watchlist.php" class="<?= ($current_page == 'watchlist.php') ? 'active' : '' ?>">Watchlist</a></li>
+        <?php endif; ?>
             </ul>
         </nav>
         <div class="search-box">

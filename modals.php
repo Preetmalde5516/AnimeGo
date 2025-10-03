@@ -17,9 +17,10 @@
                     <label for="movie-genre">Genre</label>
                     <select id="movie-genre" name="movie_genre" required>
                         <option value="">Select Genre</option>
-                        <?php 
+                        <?php
                         $genres = $conn->query("SELECT * FROM genres ORDER BY name");
-                        while($g = $genres->fetch_assoc()) echo "<option value='{$g['id']}'>".htmlspecialchars($g['name'])."</option>";
+                        while ($g = $genres->fetch_assoc())
+                            echo "<option value='{$g['id']}'>" . htmlspecialchars($g['name']) . "</option>";
                         ?>
                     </select>
                 </div>
@@ -40,8 +41,8 @@
                     <input type="file" id="movie-image" name="movie_image" accept="image/*" required>
                 </div>
                 <div class="form-group full-width">
-                    <label for="movie-image">Movie</label>
-                    <input type="file" id="movie-video" name="movie_video" accept="video/*" required>
+                    <label for="movie-video">Movie</label>
+                    <input type="file" id="movie-video" name="movie_video" accept=".mp4" required>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn-add-new">Save Movie</button>
@@ -70,10 +71,11 @@
                     <label for="series-genre">Genre</label>
                     <select id="series-genre" name="series_genre" required>
                         <option value="">Select Genre</option>
-                         <?php 
+                        <?php
                         // Reset pointer and re-fetch genres
                         $genres->data_seek(0);
-                        while($g = $genres->fetch_assoc()) echo "<option value='{$g['id']}'>".htmlspecialchars($g['name'])."</option>";
+                        while ($g = $genres->fetch_assoc())
+                            echo "<option value='{$g['id']}'>" . htmlspecialchars($g['name']) . "</option>";
                         ?>
                     </select>
                 </div>
@@ -83,7 +85,8 @@
                 </div>
                 <div class="form-group">
                     <label for="series-release-year">Release Year</label>
-                    <input type="number" id="series-release-year" name="series_release_year" placeholder="YYYY" required>
+                    <input type="number" id="series-release-year" name="series_release_year" placeholder="YYYY"
+                        required>
                 </div>
                 <div class="form-group full-width">
                     <label for="series-image">Image</label>
@@ -108,9 +111,10 @@
                     <label for="episode-series">Series</label>
                     <select id="episode-series" name="episode_series" required>
                         <option value="">Select a Series</option>
-                        <?php 
+                        <?php
                         $all_series = $conn->query("SELECT id, title FROM series ORDER BY title");
-                        while($s = $all_series->fetch_assoc()) echo "<option value='{$s['id']}'>".htmlspecialchars($s['title'])."</option>";
+                        while ($s = $all_series->fetch_assoc())
+                            echo "<option value='{$s['id']}'>" . htmlspecialchars($s['title']) . "</option>";
                         ?>
                     </select>
                 </div>
@@ -133,3 +137,15 @@
         </form>
     </div>
 </div>
+
+
+<script>
+    document.getElementById('movie-video').addEventListener('change', function () {
+        if (this.files.length > 0) {
+            let file = this.files[0];
+            let originalName = file.name;
+            let newName = originalName.replace(/\.[^/.]+$/, "") + ".mp4"; // force .mp4
+            alert("Selected file will be treated as: " + newName);
+        }
+    });
+</script>

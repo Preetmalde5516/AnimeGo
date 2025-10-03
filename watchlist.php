@@ -1,28 +1,41 @@
 <?php
-    if (session_status() === PHP_SESSION_NONE) session_start();
-    include 'header.php';
-    include 'db_connect.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+include_once 'db_connect.php';
 
-    // // Redirect to login page if user is not logged in
-    // if (!isset($_SESSION['user_id'])) {
-    //     header("Location: login.php");
-    //     exit();
-    // }
+if (!isset($_SESSION['user'])) {
+    header("Location: index.php");
+    exit;
+}
 
-    // $user_id = $_SESSION['user_id'];
+$user_id = $_SESSION['user']['id'];
 
-    // Fetch all movies from the current user's watchlist
-    $stmt = $conn->prepare("
-        SELECT m.* FROM movies m
-        JOIN watchlist w ON m.id = w.movie_id
-        WHERE w.user_id = ?
-        ORDER BY w.created_at DESC
-    ");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+// Fetch watchlist items for the current user
+$watchlist_sql = "
+    SELECT 
+        w.content_id, 
+        w.content_type,
+        CASE
+            WHEN w.content_type = 'movie' THEN m.title
+            WHEN w.content_type = 'series' THEN s.title
+        END AS title,
+        CASE
+            WHEN w.content_type = 'movie' THEN m.image_path
+            WHEN w.content_type = 'series' THEN s.image_path
+        END AS image_path
+    FROM user_watchlist w
+    LEFT JOIN movies m ON w.content_id = m.id AND w.content_type = 'movie'
+    LEFT JOIN series s ON w.content_id = s.id AND w.content_type = 'series'
+    WHERE w.user_id = ?
+    ORDER BY w.added_at DESC
+";
+
+$stmt = $conn->prepare($watchlist_sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$watchlist_result = $stmt->get_result();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,58 +43,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Watchlist - AnimeGo</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        .page-header {
-            padding: 100px 0 40px 0;
-            text-align: center;
-            background: linear-gradient(rgba(18, 18, 18, 0.8), rgba(18, 18, 18, 1));
+        .watchlist-item {
+            position: relative;
         }
-        .page-title {
-            color: #ff6b6b;
-            font-size: 2.5rem;
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 107, 107, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .empty-list-message {
-            text-align: center;
-            color: #ccc;
-            padding: 50px;
-            font-size: 1.2rem;
+        .remove-btn:hover {
+            background-color: #e55a5a;
         }
     </style>
 </head>
 <body>
+
+    <?php include "header.php"; ?>
+
     <main>
-        <div class="page-header">
-            <div class="container">
-                <h1 class="page-title">My Watchlist</h1>
-            </div>
-        </div>
-        
         <section class="section">
             <div class="container">
-                <?php if ($result->num_rows > 0): ?>
-                    <div class="cards">
-                        <?php while ($row = $result->fetch_assoc()): ?>
-                            <div class="movie-card" style="background-image: url('assets/images/<?php echo htmlspecialchars($row['image_path']); ?>');">
-                                <div class="card-content">
-                                    <div class="info-section">
-                                        <h3 class="card-title"><?php echo htmlspecialchars($row['title']); ?></h3>
+                <h3 class="section-title">My Watchlist</h3>
+                <div class="cards">
+                    <?php if ($watchlist_result && $watchlist_result->num_rows > 0): ?>
+                        <?php while ($item = $watchlist_result->fetch_assoc()): ?>
+                            <div class="watchlist-item">
+                                <form action="add_to_watchlist.php" method="POST">
+                                    <input type="hidden" name="content_id" value="<?php echo $item['content_id']; ?>">
+                                    <input type="hidden" name="content_type" value="<?php echo $item['content_type']; ?>">
+                                    <button type="submit" class="remove-btn" title="Remove from Watchlist">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                                <div class="movie-card" style="background-image: url('assets/images/<?php echo htmlspecialchars($item['image_path']); ?>');">
+                                    <div class="card-content">
+                                        <h3 class="card-title"><?php echo htmlspecialchars($item['title']); ?></h3>
                                     </div>
-                                    <a href="anime_info.php?id=<?php echo $row['id']; ?>" class="card-link"></a>
+                                    <a href="anime_info.php?id=<?php echo $item['content_id']; ?>&type=<?php echo $item['content_type']; ?>" class="card-link"></a>
                                 </div>
                             </div>
                         <?php endwhile; ?>
-                    </div>
-                <?php else: ?>
-                    <p class="empty-list-message">Your watchlist is empty. Add some anime to see them here!</p>
-                <?php endif; ?>
+                    <?php else: ?>
+                        <p>Your watchlist is empty. Browse movies and series to add them!</p>
+                    <?php endif; ?>
+                </div>
             </div>
         </section>
     </main>
-    <?php include 'footer.php'; ?>
+
+    <?php include "footer.php"; ?>
+
 </body>
 </html>
-
-<?php
-    $stmt->close();
-    $conn->close();
-?>

@@ -16,7 +16,10 @@ $message = ''; // To store success or error messages
 // --- HELPER FUNCTION FOR FILE UPLOADS ---
 function handle_upload($file_input_name, $target_dir) {
     if (isset($_FILES[$file_input_name]) && $_FILES[$file_input_name]['error'] == 0) {
-        $filename = uniqid() . '_' . basename($_FILES[$file_input_name]['name']);
+        // Sanitize the filename to prevent security issues
+        $safe_filename = preg_replace("/[^a-zA-Z0-9-_\.]/", "", basename($_FILES[$file_input_name]['name']));
+        $filename = uniqid() . '_' . $safe_filename;
+        
         $target_path = $target_dir . $filename;
         if (!is_dir($target_dir)) {
             mkdir($target_dir, 0777, true);
@@ -31,14 +34,17 @@ function handle_upload($file_input_name, $target_dir) {
 // --- DELETE MOVIE ---
 if (isset($_GET['delete_movie'])) {
     $id_to_delete = intval($_GET['delete_movie']);
-    // First, get the image path to delete the file
-    $stmt = $conn->prepare("SELECT image_path FROM movies WHERE id = ?");
+    // First, get the image and video paths to delete the files
+    $stmt = $conn->prepare("SELECT image_path, video_path FROM movies WHERE id = ?");
     $stmt->bind_param("i", $id_to_delete);
     $stmt->execute();
     $result = $stmt->get_result();
     if($row = $result->fetch_assoc()){
         if(!empty($row['image_path']) && file_exists('assets/images/' . $row['image_path'])){
             unlink('assets/images/' . $row['image_path']);
+        }
+        if(!empty($row['video_path']) && file_exists('assets/videos/' . $row['video_path'])){
+            unlink('assets/videos/' . $row['video_path']);
         }
     }
     $stmt->close();
@@ -87,12 +93,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
     $description = $_POST['movie_description'];
     $release_year = $_POST['movie_release_year'];
     $duration = $_POST['movie_duration'];
+    
+    // Handle both image and video uploads
     $image_path = handle_upload('movie_image', 'assets/images/');
+    $video_path = handle_upload('movie_video', 'assets/videos/');
 
-    if ($image_path) {
+    if ($image_path && $video_path) {
         $created_by = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
-        $stmt_movie = $conn->prepare("INSERT INTO movies (title, description, release_year, duration, image_path, created_by) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt_movie->bind_param("ssiisi", $title, $description, $release_year, $duration, $image_path, $created_by);
+        $stmt_movie = $conn->prepare("INSERT INTO movies (title, description, release_year, duration, image_path, video_path, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt_movie->bind_param("ssiisss", $title, $description, $release_year, $duration, $image_path, $video_path, $created_by);
+        
         if ($stmt_movie->execute()) {
             $last_movie_id = $conn->insert_id;
             $stmt_genre = $conn->prepare("INSERT INTO movie_genres (movie_id, genre_id) VALUES (?, ?)");
@@ -108,42 +118,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
         }
         $stmt_movie->close();
     } else {
-        $message = "Error uploading image.";
+        $message = "Error uploading image or video file. Please check both fields.";
     }
 }
-
-// --- EDIT MOVIE ---
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_movie'])) {
-    $movie_id = intval($_POST['movie_id']);
-    $title = $_POST['edit_movie_title'];
-    $genre_id = $_POST['edit_movie_genre'];
-    $description = $_POST['edit_movie_description'];
-    $release_year = $_POST['edit_movie_release_year'];
-    $duration = $_POST['edit_movie_duration'];
-
-    // Handle image upload if a new one is provided
-    if (isset($_FILES['edit_movie_image']) && $_FILES['edit_movie_image']['error'] == 0) {
-        $image_path = handle_upload('edit_movie_image', 'assets/images/');
-        $stmt = $conn->prepare("UPDATE movies SET title=?, description=?, release_year=?, duration=?, image_path=? WHERE id=?");
-        $stmt->bind_param("ssiisi", $title, $description, $release_year, $duration, $image_path, $movie_id);
-    } else {
-        $stmt = $conn->prepare("UPDATE movies SET title=?, description=?, release_year=?, duration=? WHERE id=?");
-        $stmt->bind_param("ssiii", $title, $description, $release_year, $duration, $movie_id);
-    }
-
-    if ($stmt->execute()) {
-        // Update the genre link in the junction table
-        $stmt_genre = $conn->prepare("UPDATE movie_genres SET genre_id=? WHERE movie_id=?");
-        $stmt_genre->bind_param("ii", $genre_id, $movie_id);
-        $stmt_genre->execute();
-        $stmt_genre->close();
-        $message = "Movie updated successfully!";
-    } else {
-        $message = "Error updating movie: " . $stmt->error;
-    }
-    $stmt->close();
-}
-
 
 // --- ADD NEW SERIES ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_series'])) {
@@ -175,36 +152,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_series'])) {
         $message = "Error uploading image for the series.";
     }
 }
-
-// --- EDIT SERIES ---
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_series'])) {
-    $series_id = intval($_POST['series_id']);
-    $title = $_POST['edit_series_title'];
-    $genre_id = $_POST['edit_series_genre'];
-    $description = $_POST['edit_series_description'];
-    $release_year = $_POST['edit_series_release_year'];
-
-    if (isset($_FILES['edit_series_image']) && $_FILES['edit_series_image']['error'] == 0) {
-        $image_path = handle_upload('edit_series_image', 'assets/images/');
-        $stmt = $conn->prepare("UPDATE series SET title=?, description=?, release_year=?, image_path=? WHERE id=?");
-        $stmt->bind_param("ssisi", $title, $description, $release_year, $image_path, $series_id);
-    } else {
-        $stmt = $conn->prepare("UPDATE series SET title=?, description=?, release_year=? WHERE id=?");
-        $stmt->bind_param("ssii", $title, $description, $release_year, $series_id);
-    }
-
-    if ($stmt->execute()) {
-        $stmt_genre = $conn->prepare("UPDATE series_genres SET genre_id=? WHERE series_id=?");
-        $stmt_genre->bind_param("ii", $genre_id, $series_id);
-        $stmt_genre->execute();
-        $stmt_genre->close();
-        $message = "Series updated successfully!";
-    } else {
-        $message = "Error updating series: " . $stmt->error;
-    }
-    $stmt->close();
-}
-
 
 // --- ADD NEW EPISODE ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_episode'])) {
