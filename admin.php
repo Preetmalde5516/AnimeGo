@@ -284,6 +284,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_episode'])) {
 $total_movies = $conn->query("SELECT COUNT(id) as count FROM movies")->fetch_assoc()['count'];
 $total_series = $conn->query("SELECT COUNT(id) as count FROM series")->fetch_assoc()['count'];
 $total_users = $conn->query("SELECT COUNT(id) as count FROM users")->fetch_assoc()['count'];
+$unread_messages = $conn->query("SELECT COUNT(id) as count FROM contact_messages WHERE is_read = 0")->fetch_assoc()['count'];
 
 ?>
 <!DOCTYPE html>
@@ -308,6 +309,7 @@ $total_users = $conn->query("SELECT COUNT(id) as count FROM users")->fetch_assoc
                 <a href="manage_movies.php"><i class="fas fa-film"></i> Manage Movies</a>
                 <a href="manage_series.php"><i class="fas fa-tv"></i> Manage Series</a>
                 <a href="manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
+                <a href="manage_messages.php"><i class="fas fa-envelope"></i> Manage Messages</a>
             </nav>
         </aside>
 
@@ -337,6 +339,14 @@ $total_users = $conn->query("SELECT COUNT(id) as count FROM users")->fetch_assoc
                     <div class="stat-card-info">
                         <h3><?php echo $total_users; ?></h3><p>Registered Users</p>
                     </div>
+                </div>
+                <div class="stat-card">
+                    <a href="manage_messages.php" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:20px;">
+                        <div class="stat-card-icon"><i class="fas fa-envelope-open-text"></i></div>
+                        <div class="stat-card-info">
+                            <h3><?php echo $unread_messages; ?></h3><p>Unread Messages</p>
+                        </div>
+                    </a>
                 </div>
             </section>
 

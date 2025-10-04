@@ -2,9 +2,36 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+include 'db_connect.php'; // Include your database connection
+
 $message_sent = false;
+$error_message = '';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST"){
-    $message_sent = true;
+    $name = trim($_POST['name']);
+    $email = trim($_POST['email']);
+    $subject = trim($_POST['subject']);
+    $message = trim($_POST['message']);
+
+    // Basic validation
+    if (!empty($name) && !empty($email) && !empty($subject) && !empty($message)) {
+        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            // Prepare and bind
+            $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, subject, message) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $name, $email, $subject, $message);
+
+            if ($stmt->execute()) {
+                $message_sent = true;
+            } else {
+                $error_message = "Sorry, there was an error sending your message. Please try again later.";
+            }
+            $stmt->close();
+        } else {
+            $error_message = "Invalid email format.";
+        }
+    } else {
+        $error_message = "Please fill out all fields.";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -91,13 +118,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
             background-color: #e55a5a;
         }
 
-        .success-message {
-            background-color: #0f0f0fff;
-            color: white;
+        .message-box {
             padding: 15px;
             border-radius: 6px;
             text-align: center;
             margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .success-message {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .error-message {
+            background-color: #e55a5a;
+            color: white;
         }
     </style>
 </head>
@@ -112,10 +146,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
                     <h2>Contact Us</h2>
 
                     <?php if($message_sent): ?>
-                        <div class="success-message">
+                        <div class="message-box success-message">
                             <h3>Thank you for your message! We'll get back to you soon.</h3>
                         </div>
                     <?php else: ?>
+                        <?php if(!empty($error_message)): ?>
+                            <div class="message-box error-message">
+                                <p><?php echo htmlspecialchars($error_message); ?></p>
+                            </div>
+                        <?php endif; ?>
                         <form id="contactForm" method="POST" action="contact_us.php">
                             <div class="form-group">
                                 <label for="name"><i class="fas fa-user"></i> Your Name</label>

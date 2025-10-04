@@ -28,6 +28,7 @@ include "db_connect.php";
                 <a href="manage_movies.php"><i class="fas fa-film"></i> Manage Movies</a>
                 <a href="manage_series.php" class="active"><i class="fas fa-tv"></i> Manage Series</a>
                 <a href="manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
+                <a href="manage_messages.php"><i class="fas fa-envelope"></i> Manage Messages</a>
             </nav>
         </aside>
         <main class="admin-main-content">
