@@ -11,6 +11,32 @@ if (!isset($_SESSION['user']) || empty($_SESSION['user']['is_admin'])) {
 
 include "db_connect.php"; // Include your database connection
 
+// --- AJAX: FETCH MOVIE/SERIES DETAILS ---
+if (isset($_GET['get_details'])) {
+    $id = intval($_GET['id']);
+    $type = $_GET['type'];
+    $data = null;
+
+    if ($type === 'movie') {
+        $stmt = $conn->prepare("SELECT m.title, m.description, m.release_year, m.duration, mg.genre_id FROM movies m JOIN movie_genres mg ON m.id = mg.movie_id WHERE m.id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+    } elseif ($type === 'series') {
+        $stmt = $conn->prepare("SELECT s.title, s.description, s.release_year, sg.genre_id FROM series s JOIN series_genres sg ON s.id = sg.series_id WHERE s.id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+    }
+    
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
+
 $message = ''; // To store success or error messages
 
 // --- HELPER FUNCTION FOR FILE UPLOADS ---
@@ -94,14 +120,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
     $release_year = $_POST['movie_release_year'];
     $duration = $_POST['movie_duration'];
     
-    // Handle both image and video uploads
     $image_path = handle_upload('movie_image', 'assets/images/');
     $video_path = handle_upload('movie_video', 'assets/videos/');
 
     if ($image_path && $video_path) {
         $created_by = isset($_SESSION['user']['id']) ? $_SESSION['user']['id'] : null;
         $stmt_movie = $conn->prepare("INSERT INTO movies (title, description, release_year, duration, image_path, video_path, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt_movie->bind_param("ssiisss", $title, $description, $release_year, $duration, $image_path, $video_path, $created_by);
+        $stmt_movie->bind_param("ssiisssi", $title, $description, $release_year, $duration, $image_path, $video_path, $created_by);
         
         if ($stmt_movie->execute()) {
             $last_movie_id = $conn->insert_id;
@@ -118,9 +143,58 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_movie'])) {
         }
         $stmt_movie->close();
     } else {
-        $message = "Error uploading image or video file. Please check both fields.";
+        $message = "Error uploading image or video file.";
     }
 }
+
+// --- UPDATE MOVIE ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_movie'])) {
+    $movie_id = $_POST['movie_id'];
+    $title = $_POST['movie_title'];
+    $genre_id = $_POST['movie_genre'];
+    $description = $_POST['movie_description'];
+    $release_year = $_POST['movie_release_year'];
+    $duration = $_POST['movie_duration'];
+
+    $image_path = handle_upload('movie_image', 'assets/images/');
+    $video_path = handle_upload('movie_video', 'assets/videos/');
+
+    $params = [];
+    $types = "";
+
+    $sql = "UPDATE movies SET title = ?, description = ?, release_year = ?, duration = ?";
+    array_push($params, $title, $description, $release_year, $duration);
+    $types .= "ssii";
+
+    if ($image_path) {
+        $sql .= ", image_path = ?";
+        array_push($params, $image_path);
+        $types .= "s";
+    }
+    if ($video_path) {
+        $sql .= ", video_path = ?";
+        array_push($params, $video_path);
+        $types .= "s";
+    }
+
+    $sql .= " WHERE id = ?";
+    array_push($params, $movie_id);
+    $types .= "i";
+
+    $stmt_movie = $conn->prepare($sql);
+    $stmt_movie->bind_param($types, ...$params);
+
+    if ($stmt_movie->execute()) {
+        $stmt_genre = $conn->prepare("UPDATE movie_genres SET genre_id = ? WHERE movie_id = ?");
+        $stmt_genre->bind_param("ii", $genre_id, $movie_id);
+        $stmt_genre->execute();
+        $message = "Movie updated successfully!";
+    } else {
+        $message = "Error updating movie: " . $stmt_movie->error;
+    }
+    $stmt_movie->close();
+}
+
 
 // --- ADD NEW SERIES ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_series'])) {
@@ -152,6 +226,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_series'])) {
         $message = "Error uploading image for the series.";
     }
 }
+
+// --- UPDATE SERIES ---
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_series'])) {
+    $series_id = $_POST['series_id'];
+    $title = $_POST['series_title'];
+    $genre_id = $_POST['series_genre'];
+    $description = $_POST['series_description'];
+    $release_year = $_POST['series_release_year'];
+    
+    $image_path = handle_upload('series_image', 'assets/images/');
+
+    $sql = "UPDATE series SET title = ?, description = ?, release_year = ?" . ($image_path ? ", image_path = ?" : "") . " WHERE id = ?";
+    $stmt_series = $conn->prepare($sql);
+    
+    if ($image_path) {
+        $stmt_series->bind_param("ssisi", $title, $description, $release_year, $image_path, $series_id);
+    } else {
+        $stmt_series->bind_param("ssii", $title, $description, $release_year, $series_id);
+    }
+
+    if ($stmt_series->execute()) {
+        $stmt_genre = $conn->prepare("UPDATE series_genres SET genre_id = ? WHERE series_id = ?");
+        $stmt_genre->bind_param("ii", $genre_id, $series_id);
+        $stmt_genre->execute();
+        $message = "Series updated successfully!";
+    } else {
+        $message = "Error updating series: " . $stmt_series->error;
+    }
+    $stmt_series->close();
+}
+
 
 // --- ADD NEW EPISODE ---
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_episode'])) {
@@ -189,48 +294,7 @@ $total_users = $conn->query("SELECT COUNT(id) as count FROM users")->fetch_assoc
     <title>Admin Dashboard - AnimeGo</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Admin Page Specific Styles */
-        .admin-wrapper { display: flex; min-height: calc(100vh - 70px); }
-        .admin-sidebar { width: 250px; background-color: #0f0f0f; padding: 20px; display: flex; flex-direction: column; }
-        .admin-sidebar h2 { color: #ff6b6b; text-align: center; margin-bottom: 30px; }
-        .admin-nav a { display: block; color: #fff; padding: 15px 20px; text-decoration: none; border-radius: 6px; margin-bottom: 10px; transition: background-color 0.3s, color 0.3s; display: flex; align-items: center; gap: 15px; }
-        .admin-nav a:hover, .admin-nav a.active { background-color: #ff6b6b; color: #fff; }
-        .admin-nav a i { width: 20px; text-align: center; }
-        .admin-main-content { flex-grow: 1; padding: 30px; background-color: #1a1a1a; }
-        .dashboard-header { margin-bottom: 30px; }
-        .dashboard-header h1 { font-size: 2.5rem; color: #ffffff; }
-        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
-        .stat-card { background-color: #2a2a2a; padding: 25px; border-radius: 8px; display: flex; align-items: center; gap: 20px; border-left: 5px solid #ff6b6b; }
-        .stat-card-icon { font-size: 3rem; color: #ff6b6b; }
-        .stat-card-info h3 { margin: 0 0 5px 0; font-size: 2rem; color: #fff; }
-        .stat-card-info p { margin: 0; color: #aaaaaa; }
-        .content-table-section { margin-bottom: 40px; }
-        .content-table-section .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .content-table-section h2 { font-size: 1.8rem; color: #ff6b6b; margin: 0; }
-        .content-table { width: 100%; border-collapse: collapse; background-color: #2a2a2a; border-radius: 8px; overflow: hidden; }
-        .content-table th, .content-table td { padding: 15px; text-align: left; border-bottom: 1px solid #333; }
-        .content-table th { background-color: #1f1f1f; }
-        .content-table td.actions a { color: #fff; margin-right: 15px; font-size: 1.1rem; }
-        .content-table td.actions a.edit { color: #4CAF50; }
-        .content-table td.actions a.delete { color: #e55a5a; }
-        .btn-add-new { background-color: #ff6b6b; color: white; padding: 10px 20px; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s; }
-        .btn-add-new:hover { background-color: #e55a5a; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
-        .modal-content { background-color: #2a2a2a; margin: auto; padding: 30px; border-radius: 8px; width: 90%; max-width: 600px; position: relative; }
-        .close-btn { color: #aaaaaa; position: absolute; top: 15px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close-btn:hover, .close-btn:focus { color: #ff6b6b; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group.full-width { grid-column: 1 / -1; }
-        .form-group label { margin-bottom: 8px; color: #cccccc; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background-color: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 4px; }
-        .form-group textarea { resize: vertical; min-height: 100px; }
-        .form-actions { grid-column: 1 / -1; text-align: right; margin-top: 20px; }
-        .message { padding: 15px; margin-bottom: 20px; border-radius: 5px; color: white; font-weight: bold; text-align: center; }
-        .message.success { background-color: #4CAF50; }
-        .message.error { background-color: #e55a5a; }
-    </style>
+    <link rel="stylesheet" href="admin_styles.css">
 </head>
 <body>
 
@@ -240,10 +304,10 @@ $total_users = $conn->query("SELECT COUNT(id) as count FROM users")->fetch_assoc
         <aside class="admin-sidebar">
             <h2><i class="fas fa-cogs"></i> Admin Panel</h2>
             <nav class="admin-nav">
-                <a href="#" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                <a href="#"><i class="fas fa-film"></i> Manage Movies</a>
-                <a href="#"><i class="fas fa-tv"></i> Manage Series</a>
-                <a href="#"><i class="fas fa-users"></i> Manage Users</a>
+                <a href="admin.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="manage_movies.php"><i class="fas fa-film"></i> Manage Movies</a>
+                <a href="manage_series.php"><i class="fas fa-tv"></i> Manage Series</a>
+                <a href="manage_users.php"><i class="fas fa-users"></i> Manage Users</a>
             </nav>
         </aside>
 
@@ -342,46 +406,6 @@ $total_users = $conn->query("SELECT COUNT(id) as count FROM users")->fetch_assoc
 
     <?php include "footer.php"; ?>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Movie Modal
-            const movieModal = document.getElementById("addMovieModal");
-            const addMovieBtn = document.getElementById("addMovieBtn");
-            const movieCloseBtn = document.querySelector(".movie-close");
-
-            addMovieBtn.onclick = () => movieModal.style.display = "flex";
-            movieCloseBtn.onclick = () => movieModal.style.display = "none";
-            
-            // Series Modal
-            const seriesModal = document.getElementById("addSeriesModal");
-            const addSeriesBtn = document.getElementById("addSeriesBtn");
-            const seriesCloseBtn = document.querySelector(".series-close");
-
-            addSeriesBtn.onclick = () => seriesModal.style.display = "flex";
-            seriesCloseBtn.onclick = () => seriesModal.style.display = "none";
-
-            // Episode Modal
-            const episodeModal = document.getElementById("addEpisodeModal");
-            const addEpisodeBtn = document.getElementById("addEpisodeBtn");
-            const episodeCloseBtn = document.querySelector(".episode-close");
-
-            addEpisodeBtn.onclick = () => episodeModal.style.display = "flex";
-            episodeCloseBtn.onclick = () => episodeModal.style.display = "none";
-
-
-            // Close modals if outside is clicked
-            window.onclick = function(event) {
-                if (event.target == movieModal) {
-                    movieModal.style.display = "none";
-                }
-                if (event.target == seriesModal) {
-                    seriesModal.style.display = "none";
-                }
-                if (event.target == episodeModal) {
-                    episodeModal.style.display = "none";
-                }
-            }
-        });
-    </script>
+    <script src="admin.js"></script>
 </body>
 </html>

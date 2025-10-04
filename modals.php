@@ -1,52 +1,52 @@
 <div id="addMovieModal" class="modal">
     <div class="modal-content">
         <span class="close-btn movie-close">&times;</span>
-        <h2 style="color: #ff6b6b; margin-bottom: 20px;">Add New Movie</h2>
-        <form id="addMovieForm" method="POST" action="admin.php" enctype="multipart/form-data">
-            <input type="hidden" name="add_movie" value="1">
+        <h2>Add New Movie</h2>
+        <form action="admin.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="add_movie">
             <div class="form-grid">
-                <div class="form-group">
-                    <label for="movie-title">Title</label>
-                    <input type="text" id="movie-title" name="movie_title" required>
+                <div class="form-group full-width">
+                    <label for="movie_title">Title</label>
+                    <input type="text" id="movie_title" name="movie_title" required>
                 </div>
                 <div class="form-group">
-                    <label for="movie-title">Japnese</label>
-                    <input type="text" id="movie-title" name="Japnese" required>
-                </div>
-                <div class="form-group">
-                    <label for="movie-genre">Genre</label>
-                    <select id="movie-genre" name="movie_genre" required>
-                        <option value="">Select Genre</option>
+                    <label for="movie_genre">Genre</label>
+                    <select id="movie_genre" name="movie_genre" required>
                         <?php
-                        $genres = $conn->query("SELECT * FROM genres ORDER BY name");
-                        while ($g = $genres->fetch_assoc())
-                            echo "<option value='{$g['id']}'>" . htmlspecialchars($g['name']) . "</option>";
+                        $genres = $conn->query("SELECT id, name FROM genres ORDER BY name");
+                        while ($genre = $genres->fetch_assoc()) {
+                            echo "<option value='{$genre['id']}'>{$genre['name']}</option>";
+                        }
                         ?>
                     </select>
                 </div>
-                <div class="form-group full-width">
-                    <label for="movie-description">Description</label>
-                    <textarea id="movie-description" name="movie_description" required></textarea>
+                <div class="form-group">
+                    <label for="movie_release_year">Release Year</label>
+                    <input type="number" id="movie_release_year" name="movie_release_year" required>
                 </div>
                 <div class="form-group">
-                    <label for="movie-release-year">Release Year</label>
-                    <input type="number" id="movie-release-year" name="movie_release_year" placeholder="YYYY" required>
-                </div>
-                <div class="form-group">
-                    <label for="movie-duration">Duration (minutes)</label>
-                    <input type="number" id="movie-duration" name="movie_duration" required>
+                    <label for="movie_duration">Duration (minutes)</label>
+                    <input type="number" id="movie_duration" name="movie_duration" required>
                 </div>
                 <div class="form-group full-width">
-                    <label for="movie-image">Image</label>
-                    <input type="file" id="movie-image" name="movie_image" accept="image/*" required>
+                    <label for="movie_description">Description</label>
+                    <textarea id="movie_description" name="movie_description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="movie_image">Image</label>
+                    <input type="file" id="movie_image" name="movie_image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="movie_thumbnail">ThumbNail</label>
+                    <input type="file" id="movie_thumbnail" name="movie_thumbnail" accept="image/*" required>
                 </div>
                 <div class="form-group full-width">
                     <label for="movie-video">Movie</label>
                     <input type="file" id="movie-video" name="movie_video" accept=".mp4" required>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-add-new">Save Movie</button>
-                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-add-new">Add Movie</button>
             </div>
         </form>
     </div>
@@ -55,46 +55,40 @@
 <div id="addSeriesModal" class="modal">
     <div class="modal-content">
         <span class="close-btn series-close">&times;</span>
-        <h2 style="color: #ff6b6b; margin-bottom: 20px;">Add New Series</h2>
-        <form id="addSeriesForm" method="POST" action="admin.php" enctype="multipart/form-data">
-            <input type="hidden" name="add_series" value="1">
+        <h2>Add New Series</h2>
+        <form action="admin.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="add_series">
             <div class="form-grid">
-                <div class="form-group">
-                    <label for="series-title">Title</label>
-                    <input type="text" id="series-title" name="series_title" required>
+                <div class="form-group full-width">
+                    <label for="series_title">Title</label>
+                    <input type="text" id="series_title" name="series_title" required>
                 </div>
                 <div class="form-group">
-                    <label for="movie-title">Japnese</label>
-                    <input type="text" id="series-title" name="Japnese" required>
-                </div>
-                <div class="form-group">
-                    <label for="series-genre">Genre</label>
-                    <select id="series-genre" name="series_genre" required>
-                        <option value="">Select Genre</option>
+                    <label for="series_genre">Genre</label>
+                    <select id="series_genre" name="series_genre" required>
                         <?php
-                        // Reset pointer and re-fetch genres
-                        $genres->data_seek(0);
-                        while ($g = $genres->fetch_assoc())
-                            echo "<option value='{$g['id']}'>" . htmlspecialchars($g['name']) . "</option>";
+                        $genres->data_seek(0); // Reset pointer
+                        while ($genre = $genres->fetch_assoc()) {
+                            echo "<option value='{$genre['id']}'>{$genre['name']}</option>";
+                        }
                         ?>
                     </select>
                 </div>
-                <div class="form-group full-width">
-                    <label for="series-description">Description</label>
-                    <textarea id="series-description" name="series_description" required></textarea>
-                </div>
                 <div class="form-group">
-                    <label for="series-release-year">Release Year</label>
-                    <input type="number" id="series-release-year" name="series_release_year" placeholder="YYYY"
-                        required>
+                    <label for="series_release_year">Release Year</label>
+                    <input type="number" id="series_release_year" name="series_release_year" required>
                 </div>
                 <div class="form-group full-width">
-                    <label for="series-image">Image</label>
-                    <input type="file" id="series-image" name="series_image" accept="image/*" required>
+                    <label for="series_image">Image</label>
+                    <input type="file" id="series_image" name="series_image" accept="image/*" required>
                 </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-add-new">Save Series</button>
+                <div class="form-group full-width">
+                    <label for="series_description">Description</label>
+                    <textarea id="series_description" name="series_description" required></textarea>
                 </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-add-new">Add Series</button>
             </div>
         </form>
     </div>
@@ -103,49 +97,140 @@
 <div id="addEpisodeModal" class="modal">
     <div class="modal-content">
         <span class="close-btn episode-close">&times;</span>
-        <h2 style="color: #ff6b6b; margin-bottom: 20px;">Upload Episode</h2>
-        <form id="addEpisodeForm" method="POST" action="admin.php" enctype="multipart/form-data">
-            <input type="hidden" name="add_episode" value="1">
+        <h2>Upload New Episode</h2>
+        <form action="admin.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="add_episode">
+            <div class="form-group full-width">
+                <label for="episode_series">Select Series</label>
+                <select id="episode_series" name="episode_series" required>
+                    <?php
+                    $series_list = $conn->query("SELECT id, title FROM series ORDER BY title");
+                    while ($series = $series_list->fetch_assoc()) {
+                        echo "<option value='{$series['id']}'>{$series['title']}</option>";
+                    }
+                    ?>
+                </select>
+            </div>
             <div class="form-grid">
-                <div class="form-group full-width">
-                    <label for="episode-series">Series</label>
-                    <select id="episode-series" name="episode_series" required>
-                        <option value="">Select a Series</option>
-                        <?php
-                        $all_series = $conn->query("SELECT id, title FROM series ORDER BY title");
-                        while ($s = $all_series->fetch_assoc())
-                            echo "<option value='{$s['id']}'>" . htmlspecialchars($s['title']) . "</option>";
-                        ?>
-                    </select>
+                <div class="form-group">
+                    <label for="episode_number">Episode Number</label>
+                    <input type="number" id="episode_number" name="episode_number" required>
                 </div>
                 <div class="form-group">
-                    <label for="episode-number">Episode Number</label>
-                    <input type="number" id="episode-number" name="episode_number" required>
+                    <label for="episode_title">Episode Title</label>
+                    <input type="text" id="episode_title" name="episode_title" required>
                 </div>
-                <div class="form-group">
-                    <label for="episode-title">Episode Title</label>
-                    <input type="text" id="episode-title" name="episode_title" required>
-                </div>
-                <div class="form-group full-width">
-                    <label for="episode-video">Video File</label>
-                    <input type="file" id="episode-video" name="episode_video" accept="video/*" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn-add-new">Upload Episode</button>
-                </div>
+            </div>
+            <div class="form-group full-width">
+                <label for="episode_video">Video File</label>
+                <input type="file" id="episode_video" name="episode_video" accept="video/*" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-add-new">Upload Episode</button>
             </div>
         </form>
     </div>
 </div>
 
+<div id="editMovieModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn edit-movie-close">&times;</span>
+        <h2>Edit Movie</h2>
+        <form action="admin.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="update_movie">
+            <input type="hidden" id="edit_movie_id" name="movie_id">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="edit_movie_title">Title</label>
+                    <input type="text" id="edit_movie_title" name="movie_title" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_movie_genre">Genre</label>
+                    <select id="edit_movie_genre" name="movie_genre" required>
+                         <?php
+                        $genres->data_seek(0);
+                        while ($genre = $genres->fetch_assoc()) {
+                            echo "<option value='{$genre['id']}'>{$genre['name']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_movie_release_year">Release Year</label>
+                    <input type="number" id="edit_movie_release_year" name="movie_release_year" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_movie_duration">Duration (minutes)</label>
+                    <input type="number" id="edit_movie_duration" name="movie_duration" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="edit_movie_description">Description</label>
+                    <textarea id="edit_movie_description" name="movie_description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_movie_image">New Image (optional)</label>
+                    <input type="file" id="edit_movie_image" name="movie_image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="edit_movie_thumbnail">New ThumbNail (optional)</label>
+                    <input type="file" id="edit_movie_thumbnail" name="movie_thumbnail" accept="image/*">
+                </div>
+                <div class="form-group full-width">
+                    <label for="movie-video">New Movie (optional)</label>
+                    <input type="file" id="movie-video" name="movie_video" accept=".mp4" required>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-add-new">Update Movie</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-<script>
-    document.getElementById('movie-video').addEventListener('change', function () {
-        if (this.files.length > 0) {
-            let file = this.files[0];
-            let originalName = file.name;
-            let newName = originalName.replace(/\.[^/.]+$/, "") + ".mp4"; // force .mp4
-            alert("Selected file will be treated as: " + newName);
-        }
-    });
-</script>
+<div id="editSeriesModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn edit-series-close">&times;</span>
+        <h2>Edit Series</h2>
+        <form action="admin.php" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="update_series">
+            <input type="hidden" id="edit_series_id" name="series_id">
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="edit_series_title">Title</label>
+                    <input type="text" id="edit_series_title" name="series_title" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_series_genre">Genre</label>
+                    <select id="edit_series_genre" name="series_genre" required>
+                        <?php
+                        $genres->data_seek(0);
+                        while ($genre = $genres->fetch_assoc()) {
+                            echo "<option value='{$genre['id']}'>{$genre['name']}</option>";
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_series_release_year">Release Year</label>
+                    <input type="number" id="edit_series_release_year" name="series_release_year" required>
+                </div>
+                <div class="form-group full-width">
+                    <label for="edit_series_description">Description</label>
+                    <textarea id="edit_series_description" name="series_description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_series_image">New Image (optional)</label>
+                    <input type="file" id="edit_series_image" name="series_image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label for="edit_series_thumbnail">New ThumbNail (optional)</label>
+                    <input type="file" id="edit_series_thumbnail" name="series_thumbnail" accept="image/*">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-add-new">Update Series</button>
+            </div>
+        </form>
+    </div>
+</div>  
+

@@ -89,3 +89,12 @@ include 'db_connect.php';
                     echo "<p>No movies found at the moment.</p>";
                 }
                 ?>
+
+            </div>
+            </div>
+        </section>
+    </main> 
+
+    <?php include "footer.php"; ?>
+</body>
+</html>

@@ -119,10 +119,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <?php endif; ?>
             </ul>
         </nav>
-        <div class="search-box">
-            <input type="text" placeholder="Search anime...">
-            <button><i class="fas fa-search"></i></button>
-        </div>
+        <!-- Search Form -->
+        <form class="search-box" action="search.php" method="GET">
+            <input type="text" name="q" placeholder="Search anime..." required>
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
         <div class="profile">
             <?php if (isset($_SESSION['user'])): ?>
                 <?php if (!empty($_SESSION['user']['is_admin'])): ?>

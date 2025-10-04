@@ -69,7 +69,7 @@ $title = htmlspecialchars($item['title']);
 $japanese_title = htmlspecialchars($item['Japnese'] ?? 'N/A');
 $synopsis = htmlspecialchars($item['description'] ?? 'No synopsis available.');
 $poster_image = htmlspecialchars($item['image_path'] ?? 'default_poster.jpg');
-$background_image = 'default_background.jpg'; // Default value
+$background_image = htmlspecialchars($item['thumbnail_path'] ?? $item['image_path'] ?? 'default_background.jpg');
 $rating = 'N/A'; // Default value
 $quality = 'HD'; // Default value
 $type = ($item_type === 'movie') ? 'Movie' : 'TV'; // Determine type from URL parameter
@@ -91,7 +91,7 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
         /* Your existing CSS styles... (No changes needed here) */
         .anime-info-hero {
             background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-                        url('assets/images/backgrounds/<?php echo $background_image; ?>') no-repeat center center/cover;
+                        url('assets/thumbnail/<?php echo $background_image; ?>') no-repeat center center/cover;
             min-height: 70vh;
             display: flex;
             align-items: center;

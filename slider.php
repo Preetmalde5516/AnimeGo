@@ -1,48 +1,64 @@
-<!-- AnimeHub Slider -->
+<?php
+// --- FETCH DATA FOR THE SLIDER ---
+$slider_sql = "
+    (SELECT 
+        id, title, description, thumbnail_path, 'movie' as item_type 
+    FROM movies ORDER BY id DESC LIMIT 3)
+    UNION ALL
+    (SELECT 
+        id, title, description, thumbnail_path, 'series' as item_type 
+    FROM series ORDER BY id DESC LIMIT 3)
+    ORDER BY id DESC
+    LIMIT 3;
+";
+$slider_result = mysqli_query($conn, $slider_sql);
+$slides = [];
+if ($slider_result) {
+    while ($row = mysqli_fetch_assoc($slider_result)) {
+        $slides[] = $row;
+    }
+}
+?>
+
 <div class="animehub-slider">
     <div class="slider-container">
-        <div class="slide active">
-            <img src="https://via.placeholder.com/1200x400" alt="Featured Anime 1">
-            <div class="slide-content">
-                <h3>Attack on Titan: Final Season</h3>
-                <p>The epic conclusion to the battle between humanity and the Titans</p>
-                <a href="#" class="btn btn-primary">Watch Now</a>
+        <?php if (!empty($slides)): ?>
+            <?php foreach ($slides as $slide): ?>
+                <div class="slide">
+                    <img src="<?php echo (!empty($slide['thumbnail_path'])) ? 'assets/thumbnail/' . htmlspecialchars($slide['thumbnail_path']) : 'https://via.placeholder.com/1200x400'; ?>" alt="<?php echo htmlspecialchars($slide['title']); ?>">
+                    <div class="slide-content">
+                        <h3><?php echo htmlspecialchars($slide['title']); ?></h3>
+                        <p><?php echo htmlspecialchars(substr($slide['description'], 0, 100)) . '...'; ?></p>
+                        <a href="anime_info.php?id=<?php echo $slide['id']; ?>&type=<?php echo $slide['item_type']; ?>" class="btn-primary">Watch Now</a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="slide">
+                <img src="https://via.placeholder.com/1200x400" alt="Welcome">
+                <div class="slide-content">
+                    <h3>Welcome to AnimeGo</h3>
+                    <p>Add new movies and series to feature them here.</p>
+                </div>
             </div>
-        </div>
-        <div class="slide">
-            <img src="https://via.placeholder.com/1200x400" alt="Featured Anime 2">
-            <div class="slide-content">
-                <h3>Demon Slayer: Entertainment District Arc</h3>
-                <p>Tanjiro and his friends join the Sound Hashira Tengen Uzui</p>
-                <a href="#" class="btn btn-primary">Watch Now </a>
-            </div>
-        </div>
-        <div class="slide">
-            <img src="https://via.placeholder.com/1200x400" alt="Featured Anime 3">
-            <div class="slide-content">
-                <h3>Jujutsu Kaisen Season 2</h3>
-                <p>The prequel arc continues with Gojo's past and the Shibuya Incident</p>
-                <a href="#" class="btn btn-primary">Watch Now</a>
-            </div>
-        </div>
+        <?php endif; ?>
     </div>
+
+    <?php if (!empty($slides) && count($slides) > 1): ?>
     <div class="slider-nav">
-        <button class="nav-btn prev-btn">
-            <i class="fas fa-chevron-left"></i>
-        </button>
+        <button class="nav-btn prev-btn"><i class="fas fa-chevron-left"></i></button>
         <div class="slide-dots">
-            <span class="dot active" data-slide="0"></span>
-            <span class="dot" data-slide="1"></span>
-            <span class="dot" data-slide="2"></span>
+            <?php foreach ($slides as $index => $slide): ?>
+                <span class="dot <?php echo ($index == 0) ? 'active' : ''; ?>" data-slide="<?php echo $index; ?>"></span>
+            <?php endforeach; ?>
         </div>
-        <button class="nav-btn next-btn">
-            <i class="fas fa-chevron-right"></i>
-        </button>
+        <button class="nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
     </div>
+    <?php endif; ?>
 </div>
 
 <style>
-/* AnimeHub Slider Styles */
+/* --- CORRECTED SLIDER STYLES --- */
 .animehub-slider {
     position: relative;
     width: 100%;
@@ -53,13 +69,14 @@
 }
 
 .slider-container {
-    display: flex;
-    transition: transform 0.5s ease;
-    height: 400px;
+    display: flex; /* This is required for the sliding effect */
+    transition: transform 0.5s ease-in-out; /* This animates the slide */
+    height: 630px;
 }
 
 .slide {
-    min-width: 100%;
+    min-width: 100%; /* Each slide takes up the full width */
+    flex-shrink: 0;  /* Prevents slides from shrinking */
     position: relative;
 }
 
@@ -80,116 +97,58 @@
     color: white;
 }
 
-.slide-content h3 {
-    font-size: 28px;
-    margin-bottom: 10px;
-    color: #ff6b6b;
-}
-
-.slide-content p {
-    font-size: 16px;
-    margin-bottom: 15px;
-    max-width: 600px;
-}
-
-.slider-nav {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    z-index: 10;
-}
-
-.nav-btn {
-    background-color: rgba(255, 107, 107, 0.8);
-    border: none;
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.nav-btn:hover {
-    background-color: #ff5252;
-}
-
-.slide-dots {
-    display: flex;
-    gap: 8px;
-}
-
-.dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.dot.active {
+.btn-primary {
     background-color: #ff6b6b;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 10px;
 }
+
+.slide-content h3 { font-size: 28px; margin-bottom: 10px; color: #ff6b6b; }
+.slide-content p { font-size: 16px; margin-bottom: 15px; max-width: 600px; }
+.slider-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; z-index: 10; }
+.nav-btn { background-color: rgba(255, 107, 107, 0.8); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.3s; }
+.nav-btn:hover { background-color: #ff5252; }
+.slide-dots { display: flex; gap: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.5); cursor: pointer; transition: background-color 0.3s; }
+.dot.active { background-color: #ff6b6b; }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .slider-container {
-        height: 300px;
-    }
-    
-    .slide-content {
-        padding: 20px;
-    }
-    
-    .slide-content h3 {
-        font-size: 22px;
-    }
-    
-    .slide-content p {
-        font-size: 14px;
-    }
+    .slider-container { height: 300px; }
+    .slide-content { padding: 20px; }
+    .slide-content h3 { font-size: 22px; }
+    .slide-content p { font-size: 14px; }
 }
-
 @media (max-width: 480px) {
-    .slider-container {
-        height: 250px;
-    }
-    
-    .slide-content h3 {
-        font-size: 18px;
-    }
-    
-    .slide-content p {
-        display: none;
-    }
-    
-    .nav-btn {
-        width: 35px;
-        height: 35px;
-    }
+    .slider-container { height: 250px; }
+    .slide-content h3 { font-size: 18px; }
+    .slide-content p { display: none; }
+    .nav-btn { width: 35px; height: 35px; }
 }
 </style>
 
 <script>
+/* --- CORRECTED SLIDER SCRIPT --- */
 document.addEventListener('DOMContentLoaded', function() {
-    const slider = document.querySelector('.slider-container');
-    const slides = document.querySelectorAll('.slide');
-    const dots = document.querySelectorAll('.dot');
-    const prevBtn = document.querySelector('.prev-btn');
-    const nextBtn = document.querySelector('.next-btn');
+    const sliderWrapper = document.querySelector('.animehub-slider');
+    if (!sliderWrapper) return;
+
+    const slider = sliderWrapper.querySelector('.slider-container');
+    const slides = sliderWrapper.querySelectorAll('.slide');
+    const dots = sliderWrapper.querySelectorAll('.dot');
+    const prevBtn = sliderWrapper.querySelector('.prev-btn');
+    const nextBtn = sliderWrapper.querySelector('.next-btn');
     
+    if (slides.length <= 1) return;
+
     let currentSlide = 0;
     let slideInterval;
     
-    // Function to move to a specific slide
     function goToSlide(index) {
         if (index < 0) {
             index = slides.length - 1;
@@ -199,50 +158,26 @@ document.addEventListener('DOMContentLoaded', function() {
         
         slider.style.transform = `translateX(-${index * 100}%)`;
         
-        // Update active classes
-        document.querySelector('.slide.active').classList.remove('active');
-        document.querySelector('.dot.active').classList.remove('active');
-        
-        slides[index].classList.add('active');
+        dots.forEach(d => d.classList.remove('active'));
         dots[index].classList.add('active');
         
         currentSlide = index;
     }
     
-    // Next slide function
-    function nextSlide() {
-        goToSlide(currentSlide + 1);
-    }
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
     
-    // Previous slide function
-    function prevSlide() {
-        goToSlide(currentSlide - 1);
-    }
-    
-    // Start auto sliding
     function startSlider() {
-        slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+        slideInterval = setInterval(nextSlide, 5000);
     }
     
-    // Stop auto sliding
     function stopSlider() {
         clearInterval(slideInterval);
     }
     
-    // Event listeners for navigation
-    nextBtn.addEventListener('click', function() {
-        stopSlider();
-        nextSlide();
-        startSlider();
-    });
+    nextBtn.addEventListener('click', () => { stopSlider(); nextSlide(); startSlider(); });
+    prevBtn.addEventListener('click', () => { stopSlider(); prevSlide(); startSlider(); });
     
-    prevBtn.addEventListener('click', function() {
-        stopSlider();
-        prevSlide();
-        startSlider();
-    });
-    
-    // Event listeners for dots
     dots.forEach(dot => {
         dot.addEventListener('click', function() {
             const slideIndex = parseInt(this.getAttribute('data-slide'));
@@ -252,11 +187,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Pause slider when hovering
-    slider.addEventListener('mouseenter', stopSlider);
-    slider.addEventListener('mouseleave', startSlider);
+    sliderWrapper.addEventListener('mouseenter', stopSlider);
+    sliderWrapper.addEventListener('mouseleave', startSlider);
     
-    // Initialize the slider
     startSlider();
 });
 </script>
