@@ -493,21 +493,6 @@ footer p {
     }
 }
 
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 100vw;
-    background-image: url('assets/images/yourname.jpg');
-    /* Using one of your existing images */
-    background-size: cover;
-    background-position: center;
-    filter: blur(8px) brightness(0.4);
-    z-index: -1;
-}
-
 .contact-section {
     display: flex;
     align-items: center;
