@@ -55,85 +55,8 @@ if ($slider_result) {
         <button class="nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
     </div>
     <?php endif; ?>
-</div>
-
-<style>
-/* --- CORRECTED SLIDER STYLES --- */
-.animehub-slider {
-    position: relative;
-    width: 100%;
-    margin: 20px 0;
-    overflow: hidden;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.slider-container {
-    display: flex; /* This is required for the sliding effect */
-    transition: transform 0.5s ease-in-out; /* This animates the slide */
-    height: 630px;
-}
-
-.slide {
-    min-width: 100%; /* Each slide takes up the full width */
-    flex-shrink: 0;  /* Prevents slides from shrinking */
-    position: relative;
-}
-
-.slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.slide-content {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 30px;
-    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-    color: white;
-}
-
-.btn-primary {
-    background-color: #ff6b6b;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: bold;
-    display: inline-block;
-    margin-top: 10px;
-}
-
-.slide-content h3 { font-size: 28px; margin-bottom: 10px; color: #ff6b6b; }
-.slide-content p { font-size: 16px; margin-bottom: 15px; max-width: 600px; }
-.slider-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; z-index: 10; }
-.nav-btn { background-color: rgba(255, 107, 107, 0.8); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background-color 0.3s; }
-.nav-btn:hover { background-color: #ff5252; }
-.slide-dots { display: flex; gap: 8px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.5); cursor: pointer; transition: background-color 0.3s; }
-.dot.active { background-color: #ff6b6b; }
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .slider-container { height: 300px; }
-    .slide-content { padding: 20px; }
-    .slide-content h3 { font-size: 22px; }
-    .slide-content p { font-size: 14px; }
-}
-@media (max-width: 480px) {
-    .slider-container { height: 250px; }
-    .slide-content h3 { font-size: 18px; }
-    .slide-content p { display: none; }
-    .nav-btn { width: 35px; height: 35px; }
-}
-</style>
-
+            </div>
 <script>
-/* --- CORRECTED SLIDER SCRIPT --- */
 document.addEventListener('DOMContentLoaded', function() {
     const sliderWrapper = document.querySelector('.animehub-slider');
     if (!sliderWrapper) return;
@@ -155,26 +78,20 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (index >= slides.length) {
             index = 0;
         }
-        
         slider.style.transform = `translateX(-${index * 100}%)`;
-        
         dots.forEach(d => d.classList.remove('active'));
         dots[index].classList.add('active');
-        
         currentSlide = index;
     }
-    
     function nextSlide() { goToSlide(currentSlide + 1); }
     function prevSlide() { goToSlide(currentSlide - 1); }
     
     function startSlider() {
         slideInterval = setInterval(nextSlide, 5000);
     }
-    
     function stopSlider() {
         clearInterval(slideInterval);
     }
-    
     nextBtn.addEventListener('click', () => { stopSlider(); nextSlide(); startSlider(); });
     prevBtn.addEventListener('click', () => { stopSlider(); prevSlide(); startSlider(); });
     
@@ -186,10 +103,8 @@ document.addEventListener('DOMContentLoaded', function() {
             startSlider();
         });
     });
-    
     sliderWrapper.addEventListener('mouseenter', stopSlider);
     sliderWrapper.addEventListener('mouseleave', startSlider);
-    
     startSlider();
 });
 </script>

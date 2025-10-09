@@ -12,40 +12,6 @@ include 'db_connect.php';
     <title>Anime Series - AnimeHub</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* --- NEW ATTRACTIVE CARD STYLES --- */
-        .cards {
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 25px;
-        }
-        .movie-card {
-            border-radius: 10px;
-            transition: all 0.3s ease-in-out;
-        }
-        .movie-card:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
-        }
-        .movie-card::after {
-            background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.98) 100%);
-        }
-        .card-title {
-            font-size: 1em;
-            margin-bottom: 8px;
-        }
-        .card-meta {
-            font-size: 0.8em;
-            color: #ccc;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .card-meta span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-    </style>
 </head>
 <body>
     <?php include "header.php" ?>

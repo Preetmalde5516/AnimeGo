@@ -1,5 +1,3 @@
-
-
 <div class="login-modal" id="login-modal" style="display:none;">
         <form class="login-card" method="POST" autocomplete="off">
             <h2>Welcome back!</h2>

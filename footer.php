@@ -1,6 +1,6 @@
    <footer>
         <div class="container">
-            <p>&copy; 2023 AnimeHub. All rights reserved.</p>
+            <p>&copy; 2025 AnimeGo. All rights reserved.</p>
             <div class="footer-links">
                 <a href="#">Terms of Service</a>
                 <a href="#">Privacy Policy</a>

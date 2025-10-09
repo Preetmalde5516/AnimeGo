@@ -12,27 +12,6 @@ include 'db_connect.php'; // Include the database connection
     <title>Search Results - AnimeGo</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Reusing the card styles from your index page for consistency */
-        .cards {
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 25px;
-        }
-        .movie-card {
-            border-radius: 10px;
-            transition: all 0.3s ease-in-out;
-        }
-        .movie-card:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
-        }
-        .movie-card::after {
-            background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.98) 100%);
-        }
-        .card-title { font-size: 1em; margin-bottom: 8px; }
-        .card-meta { font-size: 0.8em; color: #ccc; display: flex; gap: 12px; align-items: center; }
-        .card-meta span { display: flex; align-items: center; gap: 4px; }
-    </style>
 </head>
 <body>
 
@@ -50,12 +29,8 @@ include 'db_connect.php'; // Include the database connection
                 <div class="cards">
                     <?php
                     if (!empty($search_query)) {
-                        // Prepare the search term for a LIKE query
                         $search_term = "%" . $search_query . "%";
-
-                        // SQL query to search in both movies and series tables
-                        $sql = "
-                            (SELECT 
+                        $sql = "(SELECT 
                                 m.id, m.title, m.image_path, 'movie' AS item_type, 
                                 m.release_year, m.duration, NULL AS episode_count 
                             FROM movies m WHERE m.title LIKE ?)
@@ -64,14 +39,11 @@ include 'db_connect.php'; // Include the database connection
                                 s.id, s.title, s.image_path, 'series' AS item_type, 
                                 s.release_year, NULL AS duration, (SELECT COUNT(id) FROM episodes WHERE series_id = s.id) AS episode_count 
                             FROM series s WHERE s.title LIKE ?)
-                            ORDER BY title ASC
-                        ";
-                        
+                            ORDER BY title ASC ";
                         $stmt = $conn->prepare($sql);
                         $stmt->bind_param("ss", $search_term, $search_term);
                         $stmt->execute();
                         $result = $stmt->get_result();
-
                         if ($result && $result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
                                 // Display each result using the existing card layout

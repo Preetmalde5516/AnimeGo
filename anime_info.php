@@ -87,49 +87,6 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
     <title><?php echo $title; ?> - AnimeGo</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Your existing CSS styles... (No changes needed here) */
-        .anime-info-hero {
-            background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
-                        url('assets/thumbnail/<?php echo $background_image; ?>') no-repeat center center/cover;
-            min-height: 70vh;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-        .anime-info-content { display: grid; grid-template-columns: 250px 1fr 250px; gap: 30px; align-items: start; margin-top: 40px; }
-        .anime-poster { position: sticky; top: 100px; }
-        .anime-poster img { width: 100%; border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); }
-        .breadcrumb { margin-bottom: 15px; font-size: 14px; color: #aaaaaa; }
-        .breadcrumb a { color: #ff6b6b; text-decoration: none; }
-        .breadcrumb a:hover { text-decoration: underline; }
-        .anime-title { font-size: 2.5rem; font-weight: bold; margin-bottom: 20px; color: #ffffff; line-height: 1.2; }
-        .anime-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; }
-        .tag { background-color: #ff6b6b; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-        .tag.rating { background-color: #4CAF50; }
-        .tag.quality { background-color: #2196F3; }
-        .tag.type { background-color: #FF9800; }
-        .action-buttons { display: flex; gap: 15px; margin-bottom: 30px; }
-        .btn-watch, .btn-add { padding: 12px 30px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
-        .btn-watch { background-color: #ff6b6b; color: white; border: none; }
-        .btn-watch:hover { background-color: #e55a5a; transform: translateY(-2px); }
-        .btn-add { background-color: transparent; color: white; border: 2px solid #ff6b6b; }
-        .btn-add:hover { background-color: #ff6b6b; color: white; }
-        .synopsis-text { color: #cccccc; line-height: 1.6; margin-bottom: 20px; }
-        .read-more { color: #ff6b6b; cursor: pointer; font-weight: 600; }
-        .anime-metadata { position: sticky; top: 100px; }
-        .metadata-item { margin-bottom: 15px; }
-        .metadata-label { color: #ff6b6b; font-weight: 600; margin-right: 10px; }
-        .metadata-value { color: #ffffff; }
-        .genre-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
-        .genre-tag { background-color: #666666; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; text-decoration: none; }
-        @media (max-width: 768px) {
-            .anime-info-content { grid-template-columns: 1fr; }
-            .anime-poster, .anime-metadata { position: static; text-align: center; }
-            .anime-poster img { max-width: 250px; }
-            .action-buttons { flex-direction: column; }
-        }
-    </style>
 </head>
 <body>
     <main>

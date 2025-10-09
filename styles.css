@@ -10,6 +10,9 @@ body {
     background-color: #1a1a1a;
     color: #ffffff;
     line-height: 1.6;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
 }
 
 a {
@@ -88,16 +91,8 @@ nav ul li a.active {
 
 .profile {
     margin-left: 20px;
-}
-
-.profile a {
-    color: #fff;
-    font-size: 1rem; /* Adjusted from 24px for consistency */
-    transition: color 0.3s;
-}
-
-.profile a:hover {
-    color: #ff6b6b; 
+    display: flex;
+    align-items: center;
 }
 
 
@@ -106,7 +101,8 @@ section {
     padding: 40px 0;
 }
 
-h3.section-title, h3 {
+h3.section-title,
+h2.section-title {
     font-size: 28px;
     margin-bottom: 30px;
     color: #ff6b6b;
@@ -114,17 +110,15 @@ h3.section-title, h3 {
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 20px;
-    justify-content: center;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 25px;
 }
 
-/* New Movie Card Styles */
 .movie-card {
     position: relative;
-    width: 100%; /* Make it responsive within the grid */
-    aspect-ratio: 2 / 3; /* Maintain aspect ratio */
-    border-radius: 8px;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 10px;
     overflow: hidden;
     color: white;
     background-size: cover;
@@ -133,11 +127,12 @@ h3.section-title, h3 {
     flex-direction: column;
     justify-content: flex-end;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    transition: transform 0.2s ease-in-out;
+    transition: all 0.3s ease-in-out;
 }
 
 .movie-card:hover {
-    transform: scale(1.03);
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 10px 25px rgba(255, 107, 107, 0.3);
 }
 
 .movie-card::after {
@@ -147,7 +142,7 @@ h3.section-title, h3 {
     bottom: 0;
     width: 100%;
     height: 50%;
-    background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.9) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.9) 100%);
     z-index: 1;
 }
 
@@ -163,13 +158,22 @@ h3.section-title, h3 {
 
 .card-title {
     margin: 0 0 8px 0;
-    font-size: 1.1em;
+    font-size: 1em;
     font-weight: bold;
 }
 
 .card-meta {
-    font-size: 0.9em;
+    font-size: 0.8em;
     color: #ccc;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .card-link {
@@ -179,30 +183,6 @@ h3.section-title, h3 {
     width: 100%;
     height: 100%;
     z-index: 3;
-}
-
-/* Pagination */
-.pagination {
-    margin-top: 30px;
-    text-align: center;
-}
-
-.page-numbers {
-    display: inline-flex;
-    gap: 10px;
-}
-
-.page-numbers a {
-    display: inline-block;
-    padding: 8px 15px;
-    background-color: #2a2a2a;
-    color: white;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
-
-.page-numbers a:hover, .page-numbers a.active {
-    background-color: #ff6b6b;
 }
 
 /* Footer Styles */
@@ -227,20 +207,24 @@ footer p {
     color: #ff6b6b;
 }
 
-/* Login Modal */
-.login-modal {
+/* Login/Register Modal Styles */
+.modal-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
 }
-.login-card {
+
+.auth-card {
     background: #2a2a2a;
     border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     padding: 40px 32px 32px 32px;
     width: 100%;
     max-width: 400px;
@@ -248,20 +232,22 @@ footer p {
     position: relative;
     text-align: center;
 }
-.login-card h2 {
+
+.auth-card h2 {
     margin-bottom: 24px;
     font-size: 2rem;
     font-weight: 600;
 }
-.login-card label {
+
+.auth-card label {
     display: block;
     text-align: left;
     margin-bottom: 6px;
     font-size: 0.95rem;
     color: #cccccc;
 }
-.login-card input[type="email"],
-.login-card input[type="password"] {
+
+.auth-card input {
     width: 100%;
     padding: 10px 12px;
     margin-bottom: 18px;
@@ -271,31 +257,12 @@ footer p {
     color: #fff;
     font-size: 1rem;
 }
-.login-card input[type="email"]:focus,
-.login-card input[type="password"]:focus {
+
+.auth-card input:focus {
     outline: 2px solid #ff6b6b;
 }
-.login-card .form-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 18px;
-}
-.login-card .remember {
-    display: flex;
-    align-items: center;
-    font-size: 0.9rem;
-}
-.login-card .remember input[type="checkbox"] {
-    accent-color: #ff6b6b;
-    margin-right: 7px;
-}
-.login-card .forgot {
-    color: #ff6b6b;
-    font-size: 0.9rem;
-    text-decoration: none;
-}
-.login-card button {
+
+.auth-card button {
     width: 100%;
     background: #ff6b6b;
     color: #fff;
@@ -308,115 +275,22 @@ footer p {
     cursor: pointer;
     transition: background 0.2s;
 }
-.login-card button:hover {
+
+.auth-card button:hover {
     background: #e55a5a;
 }
-.login-card .register-link {
+
+.auth-card .switch-link {
     margin-top: 22px;
     font-size: 1rem;
     color: #cccccc;
 }
-.login-card .register-link a {
+
+.auth-card .switch-link a {
     color: #ff6b6b;
     text-decoration: none;
     font-weight: 600;
 }
-.login-card .close-btn {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-}
-
-/* Register Modal */
-.register-modal {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2100;
-}
-.register-card {
-    background: #2a2a2a;
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    padding: 40px 32px 32px 32px;
-    width: 100%;
-    max-width: 400px;
-    color: #fff;
-    position: relative;
-    text-align: center;
-}
-.register-card h2 {
-    margin-bottom: 24px;
-    font-size: 2rem;
-    font-weight: 600;
-}
-.register-card label {
-    display: block;
-    text-align: left;
-    margin-bottom: 6px;
-    font-size: 0.95rem;
-    color: #cccccc;
-}
-.register-card input[type="text"],
-.register-card input[type="email"],
-.register-card input[type="password"] {
-    width: 100%;
-    padding: 10px 12px;
-    margin-bottom: 18px;
-    border: none;
-    border-radius: 6px;
-    background: #1a1a1a;
-    color: #fff;
-    font-size: 1rem;
-}
-.register-card input:focus {
-    outline: 2px solid #ff6b6b;
-}
-.register-card button {
-    width: 100%;
-    background: #ff6b6b;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    padding: 12px 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.register-card button:hover {
-    background: #e55a5a;
-}
-.register-card .login-link {
-    margin-top: 22px;
-    font-size: 1rem;
-    color: #cccccc;
-}
-.register-card .login-link a {
-    color: #ff6b6b;
-    text-decoration: none;
-    font-weight: 600;
-}
-.register-card .close-btn {
-    position: absolute;
-    top: 18px;
-    right: 18px;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-}
-
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -428,8 +302,749 @@ footer p {
     nav ul {
         padding: 0;
     }
-    
-    .cards {
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+/* Your existing CSS styles... (No changes needed here) */
+.anime-info-hero {
+    background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.8)),
+        url('assets/thumbnail/<?php echo $background_image; ?>') no-repeat center center/cover;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.anime-info-content {
+    display: grid;
+    grid-template-columns: 250px 1fr 250px;
+    gap: 30px;
+    align-items: start;
+    margin-top: 40px;
+}
+
+.anime-poster {
+    position: sticky;
+    top: 100px;
+}
+
+.anime-poster img {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.breadcrumb {
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #aaaaaa;
+}
+
+.breadcrumb a {
+    color: #ff6b6b;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.anime-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.anime-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.tag {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.tag.rating {
+    background-color: #4CAF50;
+}
+
+.tag.quality {
+    background-color: #2196F3;
+}
+
+.tag.type {
+    background-color: #FF9800;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.btn-watch,
+.btn-add {
+    padding: 12px 30px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-watch {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+}
+
+.btn-watch:hover {
+    background-color: #e55a5a;
+    transform: translateY(-2px);
+}
+
+.btn-add {
+    background-color: transparent;
+    color: white;
+    border: 2px solid #ff6b6b;
+}
+
+.btn-add:hover {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.synopsis-text {
+    color: #cccccc;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.read-more {
+    color: #ff6b6b;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.anime-metadata {
+    position: sticky;
+    top: 100px;
+}
+
+.metadata-item {
+    margin-bottom: 15px;
+}
+
+.metadata-label {
+    color: #ff6b6b;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.metadata-value {
+    color: #ffffff;
+}
+
+.genre-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.genre-tag {
+    background-color: #666666;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .anime-info-content {
+        grid-template-columns: 1fr;
+    }
+
+    .anime-poster,
+    .anime-metadata {
+        position: static;
+        text-align: center;
+    }
+
+    .anime-poster img {
+        max-width: 250px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    background-image: url('assets/images/yourname.jpg');
+    /* Using one of your existing images */
+    background-size: cover;
+    background-position: center;
+    filter: blur(8px) brightness(0.4);
+    z-index: -1;
+}
+
+.contact-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 70px);
+    /* Adjust based on header height */
+    padding: 40px 0;
+}
+
+.contact-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    /* Two-column layout */
+    width: 100%;
+    max-width: 1100px;
+    background-color: rgba(15, 15, 15, 0.8);
+    /* Semi-transparent background */
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.contact-info {
+    background-color: rgba(255, 107, 107, 0.1);
+    /* Accent color background */
+    padding: 40px;
+    color: #fff;
+}
+
+.contact-info h2 {
+    font-size: 2rem;
+    color: #ff6b6b;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.contact-info p {
+    font-size: 1rem;
+    color: #cccccc;
+    margin-bottom: 30px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item i {
+    color: #ff6b6b;
+    font-size: 1.2rem;
+}
+
+.contact-form {
+    padding: 40px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #cccccc;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    background-color: #1a1a1a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.3);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.submit-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #e55a5a;
+    transform: translateY(-2px);
+}
+
+.message-box {
+    padding: 20px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.success-message {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.error-message {
+    background-color: #e55a5a;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .contact-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- CORRECTED SLIDER STYLES --- */
+.animehub-slider {
+    position: relative;
+    width: 100%;
+    margin: 20px 0;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.slider-container {
+    display: flex;
+    /* This is required for the sliding effect */
+    transition: transform 0.5s ease-in-out;
+    /* This animates the slide */
+    height: 600px;
+}
+
+.slide {
+    min-width: 100%;
+    /* Each slide takes up the full width */
+    flex-shrink: 0;
+    /* Prevents slides from shrinking */
+    position: relative;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.slide-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 30px;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+}
+
+.btn-primary {
+    background-color: #ff6b6b;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.slide-content h3 {
+    font-size: 28px;
+    margin-bottom: 10px;
+    color: #ff6b6b;
+}
+
+.slide-content p {
+    font-size: 16px;
+    margin-bottom: 15px;
+    max-width: 600px;
+}
+
+.slider-nav {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 10;
+}
+
+.nav-btn {
+    background-color: rgba(255, 107, 107, 0.8);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.nav-btn:hover {
+    background-color: #ff5252;
+}
+
+.slide-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.dot.active {
+    background-color: #ff6b6b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .slider-container {
+        height: 300px;
+    }
+
+    .slide-content {
+        padding: 20px;
+    }
+
+    .slide-content h3 {
+        font-size: 22px;
+    }
+
+    .slide-content p {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .slider-container {
+        height: 250px;
+    }
+
+    .slide-content h3 {
+        font-size: 18px;
+    }
+
+    .slide-content p {
+        display: none;
+    }
+
+    .nav-btn {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Styles for the remove button container */
+.watchlist-item {
+    position: relative;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 107, 107, 0.9);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.remove-btn:hover {
+    background-color: #e55a5a;
+}
+
+body {
+    background-color: #121212;
+    color: #fff;
+    margin: 0;
+}
+
+.watch-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.watch-content {
+    display: grid;
+    grid-template-columns: 250px 1fr 300px;
+    flex: 1;
+    gap: 0;
+}
+
+.episodes-sidebar {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-right: 1px solid #333;
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+}
+
+.episodes-title {
+    color: #ff6b6b;
+    font-size: 18px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.episode-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.episode-item {
+    background-color: #2a2a2a;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.episode-item:hover {
+    background-color: #333;
+}
+
+.episode-item.active {
+    background: #ff6b6b;
+    border: 1px solid #fff;
+}
+
+.episode-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    color: white;
+    text-decoration: none;
+}
+
+.episode-number {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.play-icon {
+    color: #4CAF50;
+    font-size: 16px;
+}
+
+.video-container {
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.video-player {
+    width: 100%;
+    height: 80vh;
+    background-color: #000;
+    position: relative;
+}
+
+#main-video {
+    width: 100%;
+    height: 100%;
+}
+
+.video-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.video-player:hover .video-controls {
+    opacity: 1;
+}
+
+.control-left,
+.control-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.control-btn,
+.play-pause-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.play-pause-btn {
+    font-size: 24px;
+}
+
+.time-display {
+    font-size: 14px;
+}
+
+.current-episode {
+    padding: 15px;
+    background-color: #1a1a1a;
+    text-align: center;
+    font-weight: 600;
+}
+
+.anime-info-sidebar {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-left: 1px solid #333;
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+}
+
+.anime-poster {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    top: 0px;
+}
+
+.anime-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.synopsis {
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+.read-more {
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.view-detail-btn {
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 15px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+
+.section {
+    padding: 40px 0;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+    .watch-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    .episodes-sidebar,
+    .anime-info-sidebar {
+        max-height: 300px;
+        order: 3;
+        border: 0;
+        border-top: 1px solid #333;
+    }
+
+    .video-container {
+        order: 1;
+    }
+
+    .anime-info-sidebar {
+        order: 2;
+    }
+
+    .video-player {
+        height: 56.25vw;
+        /* 16:9 aspect ratio */
     }
 }
