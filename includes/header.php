@@ -108,19 +108,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <nav>
             <ul>
                 <!-- Dynamically set the 'active' class based on the current page -->
-                <li><a href="index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Home</a></li>
-                <li><a href="series.php" class="<?= ($current_page == 'series.php') ? 'active' : '' ?>">Series</a></li>
-                <li><a href="movies.php" class="<?= ($current_page == 'movies.php') ? 'active' : '' ?>">Movies</a></li>
-                <li><a href="contact_us.php" class="<?= ($current_page == 'contact_us.php') ? 'active' : '' ?>">Contact US</a></li>
+                <li><a href="../public/index.php" class="<?= ($current_page == 'index.php') ? 'active' : '' ?>">Home</a></li>
+                <li><a href="../public/series.php" class="<?= ($current_page == 'series.php') ? 'active' : '' ?>">Series</a></li>
+                <li><a href="../public/movies.php" class="<?= ($current_page == 'movies.php') ? 'active' : '' ?>">Movies</a></li>
+                <li><a href="../public/contact_us.php" class="<?= ($current_page == 'contact_us.php') ? 'active' : '' ?>">Contact US</a></li>
                 <li>
     <?php if (isset($_SESSION['user_id'])): ?><a href="watchlist.php" class="<?= ($current_page == 'watchlist.php') ? 'active' : '' ?>">watchlist</a>    <?php endif; ?></li>
         <?php if (isset($_SESSION['user'])): ?>
-            <li><a href="watchlist.php" class="<?= ($current_page == 'watchlist.php') ? 'active' : '' ?>">Watchlist</a></li>
+            <li><a href="../public/watchlist.php" class="<?= ($current_page == 'watchlist.php') ? 'active' : '' ?>">Watchlist</a></li>
         <?php endif; ?>
             </ul>
         </nav>
         <!-- Search Form -->
-        <form class="search-box" action="search.php" method="GET">
+        <form class="search-box" action="../public/search.php" method="GET">
             <input type="text" name="q" placeholder="Search anime..." required>
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
@@ -128,9 +128,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <?php if (isset($_SESSION['user'])): ?>
                 <?php if (!empty($_SESSION['user']['is_admin'])): ?>
                     <!-- Displayed only for admin users -->
-                    <a href="admin.php" style="background: #4afc8d; color: #1a1a1a; border-radius: 4px; padding: 6px 16px; font-size: 1rem; text-decoration:none; font-weight:bold;">Dashboard</a>
+                    <a href="../admin/admin.php" style="background: #4afc8d; color: #1a1a1a; border-radius: 4px; padding: 6px 16px; font-size: 1rem; text-decoration:none; font-weight:bold;">Dashboard</a>
                 <?php endif; ?>
-                <a href="logout.php" style="margin-left: 10px; background: #ff6b6b; color: #fff; border-radius: 4px; padding: 6px 16px; font-size: 1rem; text-decoration:none;">Logout</a>
+                <a href="../auth/logout.php" style="margin-left: 10px; background: #ff6b6b; color: #fff; border-radius: 4px; padding: 6px 16px; font-size: 1rem; text-decoration:none;">Logout</a>
             <?php else: ?>
                 <!-- Displayed for guests (not logged in) -->
                 <a href="#" class="login-trigger" style="background: #ff6b6b; color: #fff; border-radius: 4px; padding: 6px 16px; font-size: 1rem; text-decoration:none; display:inline-block;">Login</a>
@@ -141,8 +141,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <!-- The Login and Register modals are only included in the HTML if the user is not logged in. -->
 <?php if (!isset($_SESSION['user'])): ?>
-    <?php include "login.php" ?>
-    <?php include "register.php" ?>
+    <?php include "../auth/login.php" ?>
+    <?php include "../auth/register.php" ?>
 <?php endif; ?>
 
 

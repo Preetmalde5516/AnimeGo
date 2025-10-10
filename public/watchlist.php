@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include_once 'db_connect.php';
+include_once '../includes/db_connect.php';
 
 if (!isset($_SESSION['user'])) {
     header("Location: index.php");
@@ -46,7 +46,7 @@ $watchlist_result = $stmt->get_result();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Watchlist - AnimeGo</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
        
@@ -56,7 +56,7 @@ $watchlist_result = $stmt->get_result();
 </head>
 <body>
 
-    <?php include "header.php"; ?>
+    <?php include "../includes/header.php"; ?>
 
     <main>
         <section class="section">
@@ -66,7 +66,7 @@ $watchlist_result = $stmt->get_result();
                     <?php if ($watchlist_result && $watchlist_result->num_rows > 0): ?>
                         <?php while ($item = $watchlist_result->fetch_assoc()): ?>
                             <div class="watchlist-item">
-                                <form action="add_to_watchlist.php" method="POST">
+                                <form action="../utils/add_to_watchlist.php" method="POST">
                                     <input type="hidden" name="content_id" value="<?php echo $item['content_id']; ?>">
                                     <input type="hidden" name="content_type" value="<?php echo $item['content_type']; ?>">
                                     <button type="submit" class="remove-btn" title="Remove from Watchlist">
@@ -74,7 +74,7 @@ $watchlist_result = $stmt->get_result();
                                     </button>
                                 </form>
                                 
-                                <div class="movie-card" style="background-image: url('assets/images/<?php echo htmlspecialchars($item['image_path']); ?>');">
+                                <div class="movie-card" style="background-image: url('../assets/images/<?php echo htmlspecialchars($item['image_path']); ?>');">
                                     <div class="card-content">
                                         <div class="info-section">
                                             <h3 class="card-title"><?php echo htmlspecialchars($item['title']); ?></h3>
@@ -107,7 +107,7 @@ $watchlist_result = $stmt->get_result();
         </section>
     </main>
 
-    <?php include "footer.php"; ?>
+    <?php include "../includes/footer.php"; ?>
 
 </body>
 </html>

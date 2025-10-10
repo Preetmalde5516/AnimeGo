@@ -86,22 +86,6 @@ CREATE TABLE IF NOT EXISTS episodes (
     INDEX idx_series (series_id),
     INDEX idx_episode_number (episode_number)
 );
-
--- User ratings table
-CREATE TABLE IF NOT EXISTS user_ratings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    content_type ENUM('movie', 'series') NOT NULL,
-    content_id INT NOT NULL,
-    rating INT CHECK (rating >= 1 AND rating <= 5),
-    review TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE KEY unique_rating (user_id, content_type, content_id),
-    INDEX idx_content (content_type, content_id)
-);
-
 -- User watchlist table
 CREATE TABLE IF NOT EXISTS user_watchlist (
     id INT AUTO_INCREMENT PRIMARY KEY,

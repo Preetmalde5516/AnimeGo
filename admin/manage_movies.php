@@ -3,25 +3,30 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 if (!isset($_SESSION['user']) || empty($_SESSION['user']['is_admin'])) {
-    header("Location: index.php");
+    header("Location: ../public/index.php");
     exit;
 }
-include "db_connect.php";
+include "../includes/db_connect.php";
+
+// Check for a message from a previous action
+$message = '';
+if (isset($_SESSION['message'])) {
+    $message = $_SESSION['message'];
+    unset($_SESSION['message']); // Clear the message so it doesn't show again
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Movies - Admin</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="stylesheet" href="../assets/css/admin_styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-
 <body>
-    <?php include "header.php"; ?>
+    <?php include "../includes/header.php"; ?>
     <div class="admin-wrapper">
         <aside class="admin-sidebar">
             <h2><i class="fas fa-cogs"></i> Admin Panel</h2>
@@ -37,6 +42,9 @@ include "db_connect.php";
             <div class="dashboard-header">
                 <h1>Manage Movies</h1>
             </div>
+            <?php if (!empty($message)): ?>
+                <div class="message success" style="display:block;"><?php echo htmlspecialchars($message); ?></div>
+            <?php endif; ?>
             <section class="content-table-section">
                 <div class="section-header">
                     <h2>All Movies</h2>
@@ -78,9 +86,8 @@ include "db_connect.php";
             </section>
         </main>
     </div>
-    <?php include "modals.php"; ?>
-    <?php include "footer.php"; ?>
-    <script src="admin.js"></script>
+    <?php include "../includes/modals.php"; ?>
+    <?php include "../includes/footer.php"; ?>
+    <script src="../assets/js/admin.js"></script>
 </body>
-
 </html>

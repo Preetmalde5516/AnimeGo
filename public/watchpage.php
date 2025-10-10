@@ -1,6 +1,6 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-include 'db_connect.php'; // Include your database connection
+include '../includes/db_connect.php'; // Include your database connection
 
 // --- 1. VALIDATE URL PARAMETERS ---
 if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['type'])) {
@@ -88,13 +88,13 @@ if ($item_type === 'movie') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch <?php echo $title; ?> - AnimeGo</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
 </head>
 <body>
     <div class="watch-container">
-        <?php include 'header.php'; ?>
+        <?php include '../includes/header.php'; ?>
 
         <div>
 
@@ -107,7 +107,7 @@ if ($item_type === 'movie') {
                         <?php foreach ($episodes as $ep): ?>
                             <li class="episode-item <?php echo ($ep['episode_number'] == $current_episode_number) ? 'active' : ''; ?>" 
                                 data-ep-number="<?php echo $ep['episode_number']; ?>" 
-                                data-video-src="assets/videos/<?php echo htmlspecialchars($ep['video_path']); ?>">
+                                data-video-src="../assets/videos/<?php echo htmlspecialchars($ep['video_path']); ?>">
                                 <a href="watchpage.php?id=<?php echo $item_id; ?>&type=series&ep=<?php echo $ep['episode_number']; ?>" class="episode-link">
                                     <div class="episode-info">
                                         <div class="episode-number">Episode <?php echo $ep['episode_number']; ?></div>
@@ -125,7 +125,7 @@ if ($item_type === 'movie') {
             <!-- Center - Video Player -->
             <main class="video-container">
                 <div class="video-player">
-                    <video id="main-video" src="assets/videos/<?php echo htmlspecialchars($video_src); ?>" type="video/mp4" controls></video>
+                    <video id="main-video" src="../assets/videos/<?php echo htmlspecialchars($video_src); ?>" type="video/mp4" controls></video>
 
                 </div>
                 <div class="current-episode">
@@ -138,7 +138,7 @@ if ($item_type === 'movie') {
 
             <!-- Right Sidebar - Anime Info -->
             <aside class="anime-info-sidebar">
-                <img src="assets/images/<?php echo $poster_image; ?>" alt="Poster for <?php echo $title; ?>" class="anime-poster">
+                <img src="../assets/images/<?php echo $poster_image; ?>" alt="Poster for <?php echo $title; ?>" class="anime-poster">
                 <h2 class="anime-title"><?php echo $title; ?></h2>
                 <div class="synopsis"><?php echo $synopsis; ?></div>
                 <a href="anime_info.php?id=<?php echo $item_id; ?>&type=<?php echo $item_type; ?>" class="view-detail-btn">View Full Details</a>
@@ -157,7 +157,7 @@ if ($item_type === 'movie') {
                                     ORDER BY RAND() LIMIT 3";
                     $popular_result = mysqli_query($conn, $popular_sql);
                     while ($row = mysqli_fetch_assoc($popular_result)) {
-                        echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
+                        echo '<div class="movie-card" style="background-image: url(\'../assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
                         echo '<div class="card-content">';
                         echo '<div class="info-section"><h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3></div>';
                         echo '<a href="anime_info.php?id=' . $row['id'] . '&type=' . $row['item_type'] . '" class="card-link"></a>';

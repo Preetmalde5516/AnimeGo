@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (buttons.addMovieBtn) buttons.addMovieBtn.onclick = () => modals.addMovieModal.style.display = "flex";
     if (buttons.addSeriesBtn) buttons.addSeriesBtn.onclick = () => modals.addSeriesModal.style.display = "flex";
-    if (buttons.addEpisodeBtn) buttons.addEpisodeBtn.onclick = () => modals.addEpisodeModal.style.display = "flex";
-
+    
+    // Logic for closing modals
     if (closeButtons.movieClose) closeButtons.movieClose.onclick = () => modals.addMovieModal.style.display = "none";
     if (closeButtons.editMovieClose) closeButtons.editMovieClose.onclick = () => modals.editMovieModal.style.display = "none";
     if (closeButtons.seriesClose) closeButtons.seriesClose.onclick = () => modals.addSeriesModal.style.display = "none";
@@ -76,6 +76,61 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
         });
     });
+
+    // Smart Episode Modal Logic (Add/Edit)
+    const episodeModal = modals.addEpisodeModal;
+    if (episodeModal) {
+        const episodeForm = episodeModal.querySelector('form');
+        const episodeSeriesSelect = episodeModal.querySelector('#episode_series');
+        const episodeNumberInput = episodeModal.querySelector('#episodes_number');
+        
+        const modalTitle = episodeModal.querySelector('#episodeModalTitle');
+        const submitButton = episodeModal.querySelector('#episodeSubmitBtn');
+        const episodeIdField = episodeModal.querySelector('#episode_id');
+        const episodeTitleField = episodeModal.querySelector('#episodes_title');
+        const episodeVideoField = episodeModal.querySelector('#episodes_video');
+
+        const checkAndFillEpisodeData = () => {
+            const seriesId = episodeSeriesSelect.value;
+            const episodeNumber = episodeNumberInput.value;
+
+            if (seriesId && episodeNumber) {
+                fetch(`admin.php?get_episode_details=true&series_id=${seriesId}&episode_number=${episodeNumber}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data) { // Episode EXISTS -> EDIT mode
+                            modalTitle.textContent = 'Edit Episode ' + episodeNumber;
+                            submitButton.textContent = 'Update Episode';
+                            episodeIdField.value = data.id;
+                            episodeTitleField.value = data.title;
+                            episodeVideoField.required = false; // Video optional for updates
+                        } else { // Episode does NOT exist -> ADD mode
+                            modalTitle.textContent = 'Upload New Episode';
+                            submitButton.textContent = 'Upload Episode';
+                            episodeIdField.value = '';
+                            episodeTitleField.value = ''; // Clear title for new entry
+                            episodeVideoField.required = true; // Video required for new episodes
+                        }
+                    })
+                    .catch(error => console.error('Error checking episode:', error));
+            }
+        };
+
+        // Reset form to "Add" state when "Upload Episode" button is clicked
+        if (buttons.addEpisodeBtn) {
+            buttons.addEpisodeBtn.onclick = () => {
+                episodeForm.reset();
+                modalTitle.textContent = 'Upload New Episode';
+                submitButton.textContent = 'Upload Episode';
+                episodeIdField.value = '';
+                episodeVideoField.required = true;
+                episodeModal.style.display = "flex";
+            };
+        }
+
+        episodeSeriesSelect.addEventListener('change', checkAndFillEpisodeData);
+        episodeNumberInput.addEventListener('input', checkAndFillEpisodeData);
+    }
 
     // Close modals if outside is clicked
     window.onclick = function(event) {

@@ -78,9 +78,13 @@
                     <label for="series_release_year">Release Year</label>
                     <input type="number" id="series_release_year" name="series_release_year" required>
                 </div>
-                <div class="form-group full-width">
+                <div class="form-group">
                     <label for="series_image">Image</label>
                     <input type="file" id="series_image" name="series_image" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="series_thumbnail">Thumbnail</label>
+                    <input type="file" id="series_thumbnail" name="series_thumbnail" accept="image/*" required>
                 </div>
                 <div class="form-group full-width">
                     <label for="series_description">Description</label>
@@ -97,12 +101,14 @@
 <div id="addEpisodeModal" class="modal">
     <div class="modal-content">
         <span class="close-btn episode-close">&times;</span>
-        <h2>Upload New Episode</h2>
+        <h2 id="episodeModalTitle">Upload New Episode</h2>
         <form action="admin.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="add_episode">
+            <input type="hidden" name="save_episode" value="1">
+            <input type="hidden" id="episode_id" name="episode_id">
             <div class="form-group full-width">
                 <label for="episode_series">Select Series</label>
                 <select id="episode_series" name="episode_series" required>
+                    <option value="" disabled selected>Select a series</option>
                     <?php
                     $series_list = $conn->query("SELECT id, title FROM series ORDER BY title");
                     while ($series = $series_list->fetch_assoc()) {
@@ -113,20 +119,20 @@
             </div>
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="episode_number">Episode Number</label>
-                    <input type="number" id="episode_number" name="episode_number" required>
+                    <label for="episodes_number">Episode Number</label>
+                    <input type="number" id="episodes_number" name="episode_number" required>
                 </div>
                 <div class="form-group">
-                    <label for="episode_title">Episode Title</label>
-                    <input type="text" id="episode_title" name="episode_title" required>
+                    <label for="episodes_title">Episode Title</label>
+                    <input type="text" id="episodes_title" name="episode_title" required>
                 </div>
             </div>
             <div class="form-group full-width">
-                <label for="episode_video">Video File</label>
-                <input type="file" id="episode_video" name="episode_video" accept="video/*" required>
+                <label for="episodes_video">Video File</label>
+                <input type="file" id="episodes_video" name="episode_video" accept="video/*" required>
             </div>
             <div class="form-actions">
-                <button type="submit" class="btn-add-new">Upload Episode</button>
+                <button type="submit" class="btn-add-new" id="episodeSubmitBtn">Upload Episode</button>
             </div>
         </form>
     </div>
@@ -177,7 +183,7 @@
                 </div>
                 <div class="form-group full-width">
                     <label for="movie-video">New Movie (optional)</label>
-                    <input type="file" id="movie-video" name="movie_video" accept=".mp4" required>
+                    <input type="file" id="movie-video" name="movie_video" accept=".mp4">
                 </div>
             </div>
             <div class="form-actions">
@@ -232,5 +238,4 @@
             </div>
         </form>
     </div>
-</div>  
-
+</div>

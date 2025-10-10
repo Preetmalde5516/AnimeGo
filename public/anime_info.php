@@ -1,6 +1,6 @@
 <?php
 // Include the header and database connection
-include "header.php";
+include "../includes/header.php";
 
 // --- 1. GET ITEM ID & TYPE, THEN VALIDATE ---
 if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['type'])) {
@@ -30,7 +30,7 @@ if ($item_type === 'movie') {
 } else {
     // If the type is not 'movie' or 'series', stop the script.
     echo "<div class='container' style='padding: 50px; text-align: center;'><h1>Invalid Type</h1><p>The content type specified is not valid.</p></div>";
-    include "footer.php";
+    include "../includes/footer.php";
     exit();
 }
 
@@ -43,7 +43,7 @@ $item = mysqli_fetch_assoc($result);
 // If no item is found, handle the error
 if (!$item) {
     echo "<div class='container' style='padding: 50px; text-align: center;'><h1>Content Not Found</h1><p>Sorry, we couldn't find what you're looking for.</p></div>";
-    include "footer.php";
+    include "../includes/footer.php";
     exit(); // Stop the script
 }
 
@@ -64,8 +64,6 @@ if (isset($_SESSION['user']['id'])) {
 // --- 3. PREPARE DYNAMIC DATA FOR DISPLAY ---
 // Use htmlspecialchars to prevent XSS attacks when echoing data
 $title = htmlspecialchars($item['title']);
-// The following fields do not exist in your database schema
-// They are set to default values to avoid breaking the UI.
 $japanese_title = htmlspecialchars($item['Japnese'] ?? 'N/A');
 $synopsis = htmlspecialchars($item['description'] ?? 'No synopsis available.');
 $poster_image = htmlspecialchars($item['image_path'] ?? 'default_poster.jpg');
@@ -85,16 +83,16 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $title; ?> - AnimeGo</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <main>
-        <section class="anime-info-hero">
+        <section class="anime-info-hero" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('../assets/thumbnail/<?php echo $background_image; ?>');">
             <div class="container">
                 <div class="anime-info-content">
                     <div class="anime-poster">
-                        <img src="assets/images/<?php echo $poster_image; ?>" alt="<?php echo $title; ?>">
+                        <img src="../assets/images/<?php echo $poster_image; ?>" alt="<?php echo $title; ?>">
                     </div>
 
                     <div class="synopsis-section">
@@ -112,7 +110,7 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
                              <a href="watchpage.php?id=<?php echo $item_id; ?>&type=<?php echo $item_type; ?><?php if ($item_type === 'series') echo '&ep=1'; ?>" class="btn-watch">
                                 <i class="fas fa-play"></i> Watch now
                             </a>
-                            <form action="add_to_watchlist.php" method="POST" style="margin:0;">
+                            <form action="../utils/add_to_watchlist.php" method="POST" style="margin:0;">
                                 <input type="hidden" name="content_id" value="<?php echo $item_id; ?>">
                                 <input type="hidden" name="content_type" value="<?php echo $item_type; ?>">
                                 <?php if ($in_watchlist): ?>
@@ -179,7 +177,7 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
                     mysqli_stmt_execute($popular_stmt);
                     $popular_result = mysqli_stmt_get_result($popular_stmt);
                     while ($row = mysqli_fetch_assoc($popular_result)) {
-                        echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
+                        echo '<div class="movie-card" style="background-image: url(\'../assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
                         echo '<div class="card-content">';
                         echo '<div class="info-section">';
                         echo '<h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3>';
@@ -195,7 +193,7 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
         </section>
     </main>
 
-    <?php include "footer.php" ?>
+    <?php include "../includes/footer.php"; ?>   
 
     <script>
     // This script is only for the "Read More" synopsis functionality

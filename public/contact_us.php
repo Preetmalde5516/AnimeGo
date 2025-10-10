@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include 'db_connect.php'; // Include your database connection
+include '../includes/db_connect.php'; // Include your database connection
 
 $message_sent = false;
 $error_message = '';
@@ -40,12 +40,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact Us - AnimeGo</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-    <?php include "header.php"; ?>
+    <?php include "../includes/header.php"; ?>
 
     <main>
         <section class="contact-section">
@@ -106,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST"){
         </section>
     </main>
 
-    <?php include "footer.php"; ?>
+    <?php include "../includes/footer.php"; ?>
 
 </body>
 </html>

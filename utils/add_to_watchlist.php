@@ -1,18 +1,18 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
-include 'db_connect.php';
+include '../includes/db_connect.php';
 
 // 1. Check if the user is logged in
 if (!isset($_SESSION['user']['id'])) {
     // Redirect to login or home page if not logged in
-    header("Location: index.php");
+    header("Location: ../public/index.php");
     exit();
 }
 
 // 2. Check if the required POST data was sent
 if (!isset($_POST['content_id']) || !isset($_POST['content_type'])) {
     // Redirect back if the form data is incomplete
-    header("Location: " . ($_SERVER['HTTP_REFERER'] ?? 'index.php'));
+    header("Location: " . ($_SERVER['HTTP_REFERER'] ?? '../public/index.php'));
     exit();
 }
 
@@ -23,7 +23,7 @@ $content_type = $_POST['content_type'];
 // 3. Validate the content type
 if ($content_type !== 'movie' && $content_type !== 'series') {
     // Redirect back if the content type is invalid
-    header("Location: " . ($_SERVER['HTTP_REFERER'] ?? 'index.php'));
+    header("Location: " . ($_SERVER['HTTP_REFERER'] ?? '../public/index.php'));
     exit();
 }
 

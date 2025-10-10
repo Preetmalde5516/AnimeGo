@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include 'db_connect.php';
+include '../includes/db_connect.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,13 +10,13 @@ include 'db_connect.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnimeHub - Watch Anime Online</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-    <?php include "header.php"; ?>
-    <?php include "slider.php"; ?>
+    <?php include "../includes/header.php"; ?>
+    <?php include "../includes/slider.php"; ?>
 
     <main>
         <section class="section">
@@ -34,7 +34,7 @@ include 'db_connect.php';
 
                     if ($result && mysqli_num_rows($result) > 0) {
                         while ($row = mysqli_fetch_assoc($result)) {
-                            echo '<div class="movie-card" style="background-image: url(\'assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
+                            echo '<div class="movie-card" style="background-image: url(\'../assets/images/' . htmlspecialchars($row['image_path']) . '\');">';
                             echo '<div class="card-content">';
                             echo '<h3 class="card-title">' . htmlspecialchars($row['title']) . '</h3>';
                             echo '<div class="card-meta">';
@@ -62,6 +62,6 @@ include 'db_connect.php';
         </section>
     </main>
 
-    <?php include "footer.php"; ?>
+    <?php include "../includes/footer.php"; ?>
 </body>
 </html>

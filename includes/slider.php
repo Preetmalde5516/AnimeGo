@@ -25,7 +25,7 @@ if ($slider_result) {
         <?php if (!empty($slides)): ?>
             <?php foreach ($slides as $slide): ?>
                 <div class="slide">
-                    <img src="<?php echo (!empty($slide['thumbnail_path'])) ? 'assets/thumbnail/' . htmlspecialchars($slide['thumbnail_path']) : 'https://via.placeholder.com/1200x400'; ?>" alt="<?php echo htmlspecialchars($slide['title']); ?>">
+                    <img src="<?php echo (!empty($slide['thumbnail_path'])) ? '../assets/thumbnail/' . htmlspecialchars($slide['thumbnail_path']) : 'https://via.placeholder.com/1200x400'; ?>" alt="<?php echo htmlspecialchars($slide['title']); ?>">
                     <div class="slide-content">
                         <h3><?php echo htmlspecialchars($slide['title']); ?></h3>
                         <p><?php echo htmlspecialchars(substr($slide['description'], 0, 100)) . '...'; ?></p>
