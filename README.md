@@ -1,10 +1,3 @@
-Hello, pookie 💙
-Here’s a **fully GitHub-styled README.md** with **badges, screenshots section, and installation steps** added. This is clean, professional, and perfect for GitHub submissions, college evaluation, and resumes.
-
-You can **copy–paste this directly** into `README.md`.
-
----
-
 # 🎬 AnimeGo – Anime Streaming Web Application
 
 ![PHP](https://img.shields.io/badge/PHP-8.4-blue?logo=php)
@@ -239,14 +232,3 @@ Each test includes:
 
 AnimeGo provides a **simple, functional, and user-friendly anime streaming experience** with a complete admin panel.
 It serves as a **strong foundation** for future scalability and feature expansion.
-
----
-
-If you want next:
-
-* ⭐ **Professional GitHub repo description**
-* 📄 **Resume project description**
-* 🎤 **Viva / presentation explanation**
-* 🧩 **Folder structure diagram**
-
-Just say the word, pookie 💙
