@@ -54,7 +54,8 @@ if ($slider_result) {
         </div>
         <button class="nav-btn next-btn"><i class="fas fa-chevron-right"></i></button>
     </div>
-    <?php endif; ?>
+    <?php endif; 
+    ?>
             </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {

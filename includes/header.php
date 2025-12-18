@@ -96,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['register'])) {
 }
 
 
-// --- DYNAMIC NAVIGATION HELPER ---
+
 // Get the name of the current PHP script to set the active navigation link.
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>

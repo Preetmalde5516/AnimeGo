@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $message = "Error adding series.";
             }
         } else {
-            $message = "Error uploading image.";
+            $message = "Error uploading image or video file.";
         }
     }
     
@@ -142,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $video_path = handle_upload('episode_video', '../assets/videos/');
 
-        if (!empty($episode_id)) { // UPDATE logic
+        if (!empty($episode_id)) { // UPDATE logic  
             $sql = "UPDATE episodes SET series_id = ?, episode_number = ?, title = ?";
             $params_types = "iis";
             $params_values = [$series_id, $episode_number, $title];

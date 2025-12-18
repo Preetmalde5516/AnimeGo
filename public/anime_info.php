@@ -8,7 +8,7 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id']) || !isset($_GET['type'])) {
     exit();
 }
 
-$item_id = (int)$_GET['id'];
+$item_id = (int) $_GET['id'];
 $item_type = $_GET['type'];
 $item = null;
 
@@ -79,6 +79,7 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,9 +87,11 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
     <link rel="stylesheet" href="../assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
+
 <body>
     <main>
-        <section class="anime-info-hero" style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('../assets/thumbnail/<?php echo $background_image; ?>');">
+        <section class="anime-info-hero"
+            style="background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.9)), url('../assets/thumbnail/<?php echo $background_image; ?>');">
             <div class="container">
                 <div class="anime-info-content">
                     <div class="anime-poster">
@@ -97,7 +100,9 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
 
                     <div class="synopsis-section">
                         <div class="breadcrumb">
-                            <a href="index.php">Home</a> > <a href="category.php?type=<?php echo urlencode($item_type); ?>"><?php echo ucfirst($item_type); ?></a> > <?php echo $title; ?>
+                            <a href="index.php">Home</a> > <a
+                                href="category.php?type=<?php echo urlencode($item_type); ?>"><?php echo ucfirst($item_type); ?></a>
+                            > <?php echo $title; ?>
                         </div>
                         <h1 class="anime-title"><?php echo $title; ?></h1>
                         <div class="anime-tags">
@@ -107,14 +112,16 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
                             <span class="tag"><?php echo $duration; ?></span>
                         </div>
                         <div class="action-buttons">
-                             <a href="watchpage.php?id=<?php echo $item_id; ?>&type=<?php echo $item_type; ?><?php if ($item_type === 'series') echo '&ep=1'; ?>" class="btn-watch">
+                            <a href="watchpage.php?id=<?php echo $item_id; ?>&type=<?php echo $item_type; ?><?php if ($item_type === 'series')
+                                      echo '&ep=1'; ?>" class="btn-watch">
                                 <i class="fas fa-play"></i> Watch now
                             </a>
                             <form action="../utils/add_to_watchlist.php" method="POST" style="margin:0;">
                                 <input type="hidden" name="content_id" value="<?php echo $item_id; ?>">
                                 <input type="hidden" name="content_type" value="<?php echo $item_type; ?>">
                                 <?php if ($in_watchlist): ?>
-                                    <button type="submit" class="btn-add" style="background-color: #4CAF50; border-color: #4CAF50;">
+                                    <button type="submit" class="btn-add"
+                                        style="background-color: #4CAF50; border-color: #4CAF50;">
                                         <i class="fas fa-check"></i> Added
                                     </button>
                                 <?php else: ?>
@@ -193,31 +200,32 @@ $genres = !empty($item['genres']) ? explode(', ', $item['genres']) : [];
         </section>
     </main>
 
-    <?php include "../includes/footer.php"; ?>   
+    <?php include "../includes/footer.php"; ?>
 
     <script>
-    // This script is only for the "Read More" synopsis functionality
-    document.addEventListener('DOMContentLoaded', function() {
-        const synopsisTextElement = document.querySelector('.synopsis-text');
-        const fullText = <?php echo json_encode($synopsis ?? ''); ?>;
-        const shortText = fullText.length > 300 ? fullText.substring(0, 300) + '...' : fullText;
+        // This script is only for the "Read More" synopsis functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const synopsisTextElement = document.querySelector('.synopsis-text');
+            const fullText = <?php echo json_encode($synopsis ?? ''); ?>;
+            const shortText = fullText.length > 300 ? fullText.substring(0, 300) + '...' : fullText;
 
-        if (fullText.length > 300) {
-            synopsisTextElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
-        } else {
-            synopsisTextElement.innerHTML = fullText;
-        }
-
-        synopsisTextElement.addEventListener('click', function(e) {
-            if (e.target.classList.contains('read-more')) {
-                if (e.target.textContent === '+ More') {
-                    synopsisTextElement.innerHTML = fullText + ' <span class="read-more">- Less</span>';
-                } else {
-                    synopsisTextElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
-                }
+            if (fullText.length > 300) {
+                synopsisTextElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
+            } else {
+                synopsisTextElement.innerHTML = fullText;
             }
+
+            synopsisTextElement.addEventListener('click', function (e) {
+                if (e.target.classList.contains('read-more')) {
+                    if (e.target.textContent === '+ More') {
+                        synopsisTextElement.innerHTML = fullText + ' <span class="read-more">- Less</span>';
+                    } else {
+                        synopsisTextElement.innerHTML = shortText + ' <span class="read-more">+ More</span>';
+                    }
+                }
+            });
         });
-    });
     </script>
 </body>
+
 </html>
